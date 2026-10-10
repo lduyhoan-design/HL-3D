@@ -2444,11 +2444,29 @@ const PANEL_CSS = `
 .vb button:focus-visible{outline:2px solid #8fb0ff}
 `;
 
+/** Đặt sau cùng để đè kiểu của form chi tiết (.encl) khi nằm trong bảng bên phải. */
+const PANEL_FIT_CSS = `
+/* trong bảng bên phải: không tràn ngang, mọi thứ tự xuống dòng cho vừa khung */
+.ep .body{overflow-x:hidden}
+.ep .body>*{min-width:0}
+.ep .adds{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
+.ep .chk,.ep label,.ep summary,.ep .chip{white-space:normal;overflow-wrap:anywhere}
+.ep .chk{align-items:flex-start}
+.ep .chk input{margin-top:2px;flex:none}
+.ep .encl{min-width:0;max-height:none;overflow:visible;padding:0}
+.ep .encl h4{text-transform:none;letter-spacing:0;font-size:12px}
+.ep .encl .row{grid-template-columns:repeat(2,minmax(0,1fr));align-items:end;padding:8px;border:1px solid var(--border-color,#ddd);border-radius:10px}
+.ep .encl .row>label:first-child,.ep .encl .row>.chk,.ep .encl .row>span:empty{grid-column:1/-1}
+.ep .encl .row>span:empty{display:none}
+.ep .encl .row>button{grid-column:1/-1;justify-self:end}
+.ep .encl .grid{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+`;
+
 function ensureCss() {
     if (document.getElementById("encl-panel-css")) return;
     const st = document.createElement("style");
     st.id = "encl-panel-css";
-    st.textContent = PANEL_CSS + CSS.replaceAll(".encl", ".ep .encl");
+    st.textContent = PANEL_CSS + CSS.replaceAll(".encl", ".ep .encl") + PANEL_FIT_CSS;
     document.head.appendChild(st);
 }
 
