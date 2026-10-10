@@ -1527,16 +1527,19 @@ export function buildEnclosure(o: EnclosureOptions) {
     lid = cut(fuse(lid, so), soHoles);
 
     // ---- Linh kiện tham khảo (không in)
-    const parts: { name: string; shape: IShape; kind: PartKind }[] = [];
+    const parts: { name: string; shape: IShape; kind: PartKind; ref?: PartRef }[] = [];
+    const bref = (p: Placed): PartRef => ({ t: "board", i: o.boards.indexOf(p.row) });
     if (o.parts) {
         for (const p of placed) {
             parts.push({
+                ref: bref(p),
                 name: p.preset.name,
                 kind: "pcb",
                 shape: cbox(p.x, p.y, t + p.z, p.row.l, p.row.w, 1.6),
             });
             if (p.row.comp > 0)
                 parts.push({
+                    ref: bref(p),
                     name: `${p.preset.name} (linh kiện)`,
                     kind: "comp",
                     shape: cbox(p.x, p.y, t + p.z + 1.6, p.row.l * 0.85, p.row.w * 0.8, p.row.comp),
@@ -1546,6 +1549,7 @@ export function buildEnclosure(o: EnclosureOptions) {
             const tail = tailOf(p.row);
             if (tail > 0)
                 parts.push({
+                    ref: bref(p),
                     name: `${p.preset.name} (vùng anten WiFi — để trống)`,
                     kind: "port",
                     shape: cbox(
@@ -1565,6 +1569,7 @@ export function buildEnclosure(o: EnclosureOptions) {
                 const [depth, bw, bh] = port.body;
                 const x0 = p.x - p.row.l / 2 - port.overhang;
                 parts.push({
+                    ref: bref(p),
                     name: `${p.preset.name} (cổng ${port.name})`,
                     kind: "port",
                     shape: box(x0, p.y + port.offset - bw / 2, t + p.z + 1.6, depth, bw, bh),
@@ -1573,12 +1578,14 @@ export function buildEnclosure(o: EnclosureOptions) {
         }
         if (sc)
             parts.push({
+                ref: { t: "screen" },
                 name: sc.name,
                 kind: "screen",
                 shape: cbox(lay.sx, lay.sy, top - sc.so - 1.6, sc.w, sc.h, 1.6),
             });
         if (rd)
             parts.push({
+                ref: { t: "reader" },
                 name: rd.name,
                 kind: "pcb",
                 shape: cbox(lay.rx, lay.ry, top - rd.so - 1.6, rd.w, rd.h, 1.6),
@@ -1586,6 +1593,9 @@ export function buildEnclosure(o: EnclosureOptions) {
     }
     return { body, lid, parts, lay, outer: [Lo, Wo, H + 2 * t] };
 }
+
+/** Linh kiện tham khảo thuộc về cái gì: bo thứ i, màn hình hay đầu đọc thẻ (để chỉnh ở khung Thuộc tính). */
+type PartRef = { t: "board"; i: number } | { t: "screen" } | { t: "reader" };
 
 // ------------------------------------------------------------------ màu linh kiện tham khảo
 type PartKind = "pcb" | "comp" | "port" | "screen";
@@ -1613,8 +1623,16 @@ function partMaterial(document: IDocument, kind: PartKind): string {
 function addParts(
     document: IDocument,
     folder: FolderNode,
-    parts: { name: string; shape: IShape; kind: PartKind }[],
+    parts: { name: string; shape: IShape; kind: PartKind; ref?: PartRef }[],
 ) {
+    const ef = folder.parent;
+    if (ef instanceof EnclosureFolder) {
+        try {
+            const d = JSON.parse(ef.params || "{}");
+            d.refs = parts.map((p) => p.ref ?? null);
+            ef.params = JSON.stringify(d);
+        } catch {}
+    }
     for (const p of parts)
         folder.add(
             new EditableShapeNode({
@@ -2557,6 +2575,16 @@ function currentEnclosure(document: IDocument): EnclosureFolder | undefined {
 
 class EnclosureEditor {
     static current?: EnclosureEditor;
+    /** Thông số đang sửa (để khung Thuộc tính bên trái sửa chung). */
+    get params(): EnclosureParams {
+        return this.state;
+    }
+    /** Khung Thuộc tính bên trái vừa đổi thông số: vẽ lại bảng bên phải và xem trước. */
+    externalChange() {
+        this.renderScreens();
+        this.renderLists();
+        this.boardsChanged();
+    }
     private readonly root = el("div", { className: "ep" });
     private readonly listBox = el("div", { style: "display:grid;gap:8px" });
     private readonly blockBox = el("div", { style: "display:grid;gap:8px" });
@@ -3920,3 +3948,308 @@ export class AddModuleCommand implements ICommand {
         openEditor(application);
     }
 }
+
+// ------------------------------------------------------------------ khung Thuộc tính bên trái: chỉnh linh kiện / lỗ đang chọn
+const PROP_CSS = `
+.epp{display:grid;gap:8px;padding:8px 10px 10px;font-size:12px;border-bottom:1px solid var(--border-color,#ddd)}
+.epp h5{margin:2px 0 0;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--primary-color,#0ea5b7)}
+.epp .t{font-weight:700;font-size:13px;overflow-wrap:anywhere}
+.epp .g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;align-items:end}
+.epp .full{grid-column:1/-1}
+.epp label{display:grid;gap:2px;font-size:11px;color:var(--foreground-secondary-color,#666);min-width:0}
+.epp input[type=number],.epp select{font:inherit;padding:4px 6px;min-width:0;width:100%;box-sizing:border-box;
+ border:1px solid var(--input-border-color,#ddd);border-radius:6px;background:var(--input-background-color,#fff);color:var(--foreground-color,#333)}
+.epp .chk{display:flex;gap:6px;align-items:flex-start;color:var(--foreground-color,#333);font-size:12px;overflow-wrap:anywhere}
+.epp .chk input{margin-top:2px;flex:none}
+.epp .card{border:1px solid var(--border-color,#ddd);border-radius:8px;padding:7px;display:grid;gap:6px}
+.epp button{font:inherit;cursor:pointer;border-radius:6px;border:1px solid var(--border-color,#ddd);
+ background:var(--button-secondary-background,#fff);color:var(--foreground-color,#333);padding:4px 10px;justify-self:start}
+.epp button:hover{border-color:var(--primary-color,#0ea5b7)}
+.epp .note{margin:0;color:var(--foreground-muted-color,#999);font-size:11px}
+`;
+
+function ensurePropCss() {
+    if (document.getElementById("encl-prop-css")) return;
+    const st = document.createElement("style");
+    st.id = "encl-prop-css";
+    st.textContent = PROP_CSS;
+    document.head.appendChild(st);
+}
+
+/** Ô số chỉ áp dụng khi gõ xong (Enter / rời ô), để không dựng lại hộp sau mỗi phím. */
+function numField(label: string, value: number, onChange: (v: number) => void, step = 0.5) {
+    const i = el("input", { type: "number", step: String(step), value: String(round(value)) });
+    i.addEventListener("change", () => {
+        const v = Number.parseFloat(i.value);
+        if (!Number.isNaN(v)) onChange(v);
+    });
+    return el("label", {}, label, i);
+}
+
+type Target = { kind: "part"; ref: PartRef } | { kind: "body" } | { kind: "lid" };
+
+function targetOf(node: INode): { folder: EnclosureFolder; target: Target } | undefined {
+    const parent = node.parent;
+    if (parent instanceof EnclosureFolder && node instanceof ShapeNode)
+        return { folder: parent, target: { kind: isLid(node.name) ? "lid" : "body" } };
+    const ef = parent?.parent;
+    if (parent instanceof FolderNode && ef instanceof EnclosureFolder) {
+        let idx = 0;
+        for (let c = parent.firstChild; c && c !== node; c = c.nextSibling) idx++;
+        try {
+            const ref = JSON.parse(ef.params).refs?.[idx] as PartRef | null | undefined;
+            if (ref) return { folder: ef, target: { kind: "part", ref } };
+        } catch {}
+    }
+    return undefined;
+}
+
+/** Thông số đang dùng: lấy từ bảng Làm hộp nếu đang mở, không thì từ hộp đã lưu. */
+function liveParams(folder: EnclosureFolder): EnclosureParams | undefined {
+    const ed = EnclosureEditor.current;
+    if (ed && ed.folder === folder) return ed.params;
+    return folder.data;
+}
+
+function applyChange(document: IDocument, folder: EnclosureFolder, target: Target, mutate: (st: EnclosureParams) => void) {
+    const ed = EnclosureEditor.current;
+    if (ed && ed.folder === folder) {
+        mutate(ed.params);
+        ed.externalChange();
+        return;
+    }
+    const st = folder.data;
+    if (!st) return;
+    mutate(st);
+    let r: ReturnType<typeof buildAll>;
+    try {
+        r = buildAll(st.o, st.holes, st.blocks);
+    } catch (e) {
+        PubSub.default.pub("showToast", "toast.message{0}" as any, `Không dựng lại được hộp: ${(e as Error).message ?? e}`);
+        return;
+    }
+    commitEnclosure(document, folder, st, r);
+    // chọn lại đúng linh kiện / khối vừa sửa để khung Thuộc tính vẫn hiện
+    let pick: INode | undefined;
+    if (target.kind !== "part") pick = printableIn(folder).find((n) => isLid(n.name) === (target.kind === "lid"));
+    else {
+        let pf: FolderNode | undefined;
+        for (let c = folder.firstChild; c; c = c.nextSibling) if (c instanceof FolderNode) pf = c;
+        let refs: (PartRef | null)[] = [];
+        try {
+            refs = JSON.parse(folder.params).refs ?? [];
+        } catch {}
+        const want = JSON.stringify(target.ref);
+        let idx = 0;
+        for (let c = pf?.firstChild; c; c = c.nextSibling, idx++)
+            if (JSON.stringify(refs[idx]) === want) {
+                pick = c;
+                break;
+            }
+        if (!pick) pick = printableIn(folder).find((n) => !isLid(n.name));
+    }
+    if (pick) document.selection.setSelectedNodes([pick], false);
+}
+
+function screenOptions(): [string, string][] {
+    return Object.entries(SCREEN_PRESETS).map(([k, p]) => [k, p ? `${p.group ? `${p.group}: ` : ""}${p.name}` : "Không có"]);
+}
+
+function holeCard(st: EnclosureParams, h: HoleSpec, i: number, change: (m: (st: EnclosureParams) => void) => void) {
+    const p = HOLE_PRESETS[h.preset];
+    const name = p && h.preset !== "custom" ? p.name : h.shape === "circle" ? "Lỗ tròn" : "Lỗ chữ nhật";
+    const find = (x: EnclosureParams) => x.holes.find((y) => y.id === h.id);
+    const set = (k: keyof HoleOptions, v: unknown) =>
+        change((x) => {
+            const t = find(x);
+            if (t) (t as any)[k] = v;
+        });
+    const side = h.face !== "lid" && h.face !== "bottom";
+    const del = el("button", { type: "button", textContent: "Xoá lỗ" });
+    del.addEventListener("click", () => change((x) => (x.holes = x.holes.filter((y) => y.id !== h.id))));
+    return el(
+        "div",
+        { className: "card" },
+        el("div", { className: "t", textContent: `${i + 1}. ${name}` }),
+        el(
+            "div",
+            { className: "g2" },
+            el("div", { className: "full" }, select("Mặt", h.face, FACE_NAMES, (v) => set("face", v))),
+            numField("Ngang X (mm)", h.x, (v) => set("x", v)),
+            numField(side ? "Cao (mm)" : "Dọc Y (mm)", h.y, (v) => set("y", v)),
+            ...(h.shape === "circle"
+                ? [numField("Đường kính Ø", h.w, (v) => change((x) => Object.assign(find(x) ?? {}, { w: v, h: v })), 0.1)]
+                : [numField("Rộng", h.w, (v) => set("w", v), 0.1), numField("Cao", h.h, (v) => set("h", v), 0.1)]),
+            numField("Số lỗ", h.count, (v) => set("count", Math.max(1, Math.round(v))), 1),
+            ...(h.count > 1 ? [numField("Cách nhau (mm)", h.pitch, (v) => set("pitch", v), 1)] : []),
+        ),
+        del,
+    );
+    void st;
+}
+
+function propertySection(document: IDocument, nodes: INode[]): HTMLElement | undefined {
+    if (nodes.length !== 1) return undefined;
+    const hit = targetOf(nodes[0]!);
+    if (!hit) return undefined;
+    const { folder, target } = hit;
+    const st = liveParams(folder);
+    if (!st) return undefined;
+    ensurePropCss();
+    const o = st.o;
+    const change = (m: (x: EnclosureParams) => void) => applyChange(document, folder, target, m);
+    const root = el("div", { className: "epp" });
+
+    if (target.kind === "part" && target.ref.t === "board") {
+        const i = target.ref.i;
+        const b = o.boards[i];
+        if (!b) return undefined;
+        const ob = (x: EnclosureParams) => x.o.boards[i]!;
+        const del = el("button", { type: "button", textContent: "Bỏ bo này khỏi hộp" });
+        del.addEventListener("click", () => change((x) => x.o.boards.splice(i, 1)));
+        root.append(
+            el("h5", { textContent: "Chỉnh bo mạch" }),
+            el(
+                "div",
+                { className: "g2" },
+                el(
+                    "div",
+                    { className: "full" },
+                    select("Loại bo", b.preset, Object.entries(BOARD_PRESETS).map(([k, p]) => [k, p.name]), (v) =>
+                        change((x) => {
+                            const p = BOARD_PRESETS[v]!;
+                            Object.assign(ob(x), { preset: v, l: p.l, w: p.w, pillar: p.pillar, comp: p.comp, mount: undefined, inset: undefined, portsOff: undefined });
+                            growManual(x.o);
+                        }),
+                    ),
+                ),
+                numField("Dài (mm)", b.l, (v) => change((x) => ((ob(x).l = v), growManual(x.o)))),
+                numField("Rộng (mm)", b.w, (v) => change((x) => ((ob(x).w = v), growManual(x.o)))),
+                numField("Cọc đỡ (mm)", b.pillar, (v) => change((x) => ((ob(x).pillar = Math.max(0, v)), growManual(x.o)))),
+                numField("Cao linh kiện", b.comp, (v) => change((x) => ((ob(x).comp = Math.max(0, v)), growManual(x.o)))),
+                select("Chân bắt", mountOf(b), MOUNT_NAMES, (v) => change((x) => (ob(x).mount = v as MountKind))),
+                numField("Lỗ cách mép", insetOf(b), (v) => change((x) => (ob(x).inset = v))),
+                el(
+                    "div",
+                    { className: "full" },
+                    select("Vít bắt bo (chung cả hộp)", o.screw ?? "m3", Object.entries(SCREW_PILOT).map(([k, v]) => [k, v.name]), (v) =>
+                        change((x) => (x.o.screw = v)),
+                    ),
+                ),
+            ),
+            ...allPortsOf(b).map((port) =>
+                check(`Khoét cổng ${port.name}`, !b.portsOff?.includes(port.name), (v) =>
+                    change((x) => {
+                        const off = new Set(ob(x).portsOff ?? []);
+                        if (v) off.delete(port.name);
+                        else off.add(port.name);
+                        ob(x).portsOff = [...off];
+                    }),
+                ),
+            ),
+            ...(i > 0 ? [check("Cắm chồng lên bo trước", b.stack, (v) => change((x) => ((ob(x).stack = v), growManual(x.o))))] : []),
+            del,
+        );
+        return root;
+    }
+
+    const screenBlock = () => [
+        el("div", { className: "full" }, select("Màn hình", o.screen, screenOptions(), (v) => change((x) => ((x.o.screen = v), growManual(x.o))))),
+        el(
+            "div",
+            { className: "full" },
+            select("Đầu đọc thẻ", o.reader, Object.entries(READER_PRESETS).map(([k, p]) => [k, p?.name ?? "Không có"]), (v) =>
+                change((x) => ((x.o.reader = v), growManual(x.o))),
+            ),
+        ),
+        el(
+            "div",
+            { className: "full" },
+            check("Cọc bắt màn hình / đầu đọc thẻ dùng đai ốc cấy nhiệt (có ren)", !!o.screenInsert, (v) =>
+                change((x) => (x.o.screenInsert = v)),
+            ),
+        ),
+    ];
+
+    if (target.kind === "part") {
+        const isScreen = target.ref.t === "screen";
+        const sc = SCREEN_PRESETS[o.screen];
+        root.append(
+            el("h5", { textContent: isScreen ? "Chỉnh màn hình (gắn dưới nắp)" : "Chỉnh đầu đọc thẻ (gắn dưới nắp)" }),
+            ...(isScreen && sc
+                ? [
+                      el("p", {
+                          className: "note",
+                          textContent: `Bo ${sc.w} × ${sc.h} mm · ô khoét ${sc.win[0]} × ${sc.win[1]} mm${sc.holes ? ` · lỗ vít cách ${sc.holes[0]} × ${sc.holes[1]} mm` : " · không có lỗ vít, có gờ chặn góc để dán"}`,
+                      }),
+                  ]
+                : []),
+            el("div", { className: "g2" }, ...screenBlock()),
+        );
+        return root;
+    }
+
+    // Thân hộp / Nắp hộp: kích thước + các lỗ trên phần đó
+    const lay = layoutEnclosure(o);
+    const onLid = target.kind === "lid";
+    const holes = st.holes.map((h, i) => [h, i] as const).filter(([h]) => (h.face === "lid") === onLid);
+    const addRow = el("div", { className: "g2" });
+    for (const [key, label] of [
+        ["btn12", "+ Nút nhấn"],
+        ["led5", "+ Đèn LED"],
+        ["dc55", "+ Jack nguồn"],
+        ["usbc", "+ USB-C"],
+        ["kcd1", "+ Công tắc"],
+        ["custom", "+ Lỗ tròn"],
+    ] as const) {
+        const btn = el("button", { type: "button", textContent: label });
+        btn.style.justifySelf = "stretch";
+        btn.addEventListener("click", () =>
+            change((x) => {
+                const p = HOLE_PRESETS[key]!;
+                x.holes.push({ id: newId(), face: onLid ? "lid" : "front", preset: key, shape: p.shape, w: p.w, h: p.h, x: 0, y: onLid ? 0 : Math.round((x.o.wall + layoutEnclosure(x.o).H) / 2), count: 1, pitch: 20 });
+            }),
+        );
+        addRow.append(btn);
+    }
+    root.append(
+        el("h5", { textContent: onLid ? "Chỉnh nắp hộp" : "Chỉnh thân hộp" }),
+        el(
+            "div",
+            { className: "g2" },
+            el(
+                "div",
+                { className: "full" },
+                check("Tự tính kích thước vừa với bo mạch", !o.manual, (v) =>
+                    change((x) => {
+                        if (!v) {
+                            const l = layoutEnclosure(x.o);
+                            Object.assign(x.o, { manL: l.L, manW: l.W, manH: l.H });
+                        }
+                        x.o.manual = !v;
+                    }),
+                ),
+            ),
+            numField("Dài trong lòng", lay.L, (v) => change((x) => setManual(x.o, "manL", v)), 1),
+            numField("Rộng trong lòng", lay.W, (v) => change((x) => setManual(x.o, "manW", v)), 1),
+            numField("Cao trong lòng", lay.H, (v) => change((x) => setManual(x.o, "manH", v)), 1),
+            numField("Dày thành", o.wall, (v) => change((x) => (x.o.wall = Math.max(1.2, v))), 0.2),
+            ...(onLid ? screenBlock() : []),
+        ),
+        el("h5", { textContent: onLid ? `Lỗ trên nắp (${holes.length})` : `Lỗ trên thân hộp (${holes.length})` }),
+        ...holes.map(([h, i]) => holeCard(st, h, i, change)),
+        ...(holes.length ? [] : [el("p", { className: "note", textContent: "Chưa có lỗ nào. Bấm nút dưới để thêm." })]),
+        addRow,
+    );
+    return root;
+}
+
+function setManual(o: EnclosureOptions, key: "manL" | "manW" | "manH", v: number) {
+    if (!o.manual) {
+        const l = layoutEnclosure(o);
+        Object.assign(o, { manual: true, manL: l.L, manW: l.W, manH: l.H });
+    }
+    o[key] = v;
+}
+
+((globalThis as any).__chiliPropertyExtensions ??= []).push(propertySection);

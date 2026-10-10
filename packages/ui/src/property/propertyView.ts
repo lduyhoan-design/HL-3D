@@ -48,6 +48,18 @@ export class PropertyView extends HTMLElement {
     private readonly handleShowProperties = (document: IDocument, nodes: INode[]) => {
         this.removeProperties();
         if (nodes.length === 0) return;
+        // phần mở rộng (vd. tab Hộp mạch): khung chỉnh riêng cho linh kiện / lỗ đang chọn, đặt trên cùng
+        const extensions = (globalThis as any).__chiliPropertyExtensions as
+            | ((document: IDocument, nodes: INode[]) => HTMLElement | undefined)[]
+            | undefined;
+        for (const ext of extensions ?? []) {
+            try {
+                const e = ext(document, nodes);
+                if (e) this.panel.append(e);
+            } catch (err) {
+                console.warn(err);
+            }
+        }
         this.addModel(document, nodes);
         this.addGeometry(nodes, document);
         this.addFeatureList(document, nodes);
