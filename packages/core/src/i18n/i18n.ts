@@ -45,7 +45,7 @@ export class I18n {
             return language;
         }
 
-        return "en";
+        return languages.has("vi") ? "vi" : "en";
     }
 
     static getLanguages(): Locale[] {

@@ -906,6 +906,19 @@ export class ChatPanel extends HTMLElement {
             span({ className: style.thinkingDot }),
             span({ className: style.thinkingDot }),
         );
+        // đồng hồ đếm giây khi đang chờ AI trả lời
+        const started = Date.now();
+        const clock = span({ className: style.waitClock, textContent: "AI đang trả lời… 0 giây" });
+        thinkingEl.append(clock);
+        const tick = window.setInterval(() => {
+            if (!clock.isConnected) {
+                window.clearInterval(tick);
+                return;
+            }
+            const sec = Math.round((Date.now() - started) / 1000);
+            clock.textContent =
+                sec < 60 ? `AI đang trả lời… ${sec} giây` : `AI đang trả lời… ${Math.floor(sec / 60)} phút ${sec % 60} giây`;
+        }, 1000);
         assistantEl.append(thinkingEl);
         this.messageList.append(assistantEl);
         this.activeAssistantEl = assistantEl;

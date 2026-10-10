@@ -58,7 +58,7 @@ export abstract class SelectionHandler implements IEventHandler {
     }
 
     pointerMove(view: IView, event: PointerEvent): void {
-        if (event.buttons === MOUSE_MIDDLE) return;
+        if (event.buttons === MOUSE_MIDDLE || event.buttons === 2) return;
         if (this.rect) this.updateRect(this.rect, event);
 
         this.setHighlight(view, event);
@@ -133,6 +133,13 @@ export abstract class SelectionHandler implements IEventHandler {
             if (count > 0 && (!this.multiMode || this.canFinishSelection())) this.controller?.success();
         }
         this.pointerEventMap.delete(event.pointerId);
+    }
+
+    /** Huỷ thao tác chọn đang dở (khi kéo chuột trái được dùng để xoay khung nhìn). */
+    cancelPointerGesture(): void {
+        this.mouse.isDown = false;
+        this.rect?.element.remove();
+        this.rect = undefined;
     }
 
     protected removeRect(view: IView) {

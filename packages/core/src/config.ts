@@ -108,7 +108,7 @@ export class Config extends Observable {
 
     @serialize()
     get themeMode() {
-        return this.getPrivateValue("themeMode", "system");
+        return this.getPrivateValue("themeMode", "dark");
     }
     set themeMode(value: "light" | "dark" | "system") {
         this.setProperty("themeMode", value, () => this.applyTheme(value));

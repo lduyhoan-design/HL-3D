@@ -4,6 +4,7 @@
 import en from "./en";
 import ptBr from "./pt-br";
 import ru from "./ru";
+import vi from "./vi";
 import zhCn from "./zh-cn";
 
-export { en, ptBr, ru, zhCn };
+export { en, ptBr, ru, vi, zhCn };

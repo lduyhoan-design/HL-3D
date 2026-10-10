@@ -5,6 +5,33 @@ import type { RibbonTabKeys, RibbonTabProfile } from "@chili3d/core";
 
 export const DefaultRibbon: RibbonTabProfile[] = [
     {
+        tabName: "ribbon.tab.enclosure" as RibbonTabKeys,
+        groups: [
+            {
+                groupName: "ribbon.group.enclosure" as any,
+                items: [
+                    "enclosure.addModule" as any,
+                    "enclosure.create" as any,
+                    "enclosure.hole" as any,
+                    "enclosure.edit" as any,
+                    "enclosure.exportStl" as any,
+                ],
+            },
+            {
+                groupName: "ribbon.group.enclosureActs" as any,
+                items: ["edit.undo", "edit.redo", "modify.deleteNode"],
+            },
+            {
+                groupName: "ribbon.group.project" as any,
+                items: ["project.save" as any, "project.open" as any, "project.folder" as any, "file.import"],
+            },
+            {
+                groupName: "ribbon.group.assistant" as any,
+                items: ["ai.toggleChat"],
+            },
+        ],
+    },
+    {
         tabName: "ribbon.tab.model",
         groups: [
             {

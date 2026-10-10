@@ -9,6 +9,11 @@ interface MouseDownData {
 }
 
 const MOUSE_MIDDLE = 4;
+/** Kéo chuột phải: xoay; Shift + kéo chuột phải: dời (dễ dùng như Tinkercad, không cần chuột giữa). */
+const MOUSE_RIGHT = 2;
+const MOUSE_LEFT = 1;
+/** Kéo chuột trái quá ngưỡng này (px) khi không có lệnh nào đang chạy thì xoay thay vì chọn. */
+const LEFT_DRAG_THRESHOLD = 4;
 
 export class ThreeViewHandler implements IEventHandler {
     private _lastDown: MouseDownData | undefined;
@@ -16,6 +21,9 @@ export class ThreeViewHandler implements IEventHandler {
     private _offsetPoint: { x: number; y: number } | undefined;
     protected lastPointerEventMap: Map<number, PointerEvent> = new Map();
     protected currentPointerEventMap: Map<number, PointerEvent> = new Map();
+
+    private _leftStart: { x: number; y: number } | undefined;
+    private _leftRotating = false;
 
     canRotate: boolean = true;
     isEnabled = true;
@@ -48,7 +56,44 @@ export class ThreeViewHandler implements IEventHandler {
         view.update();
     }
 
+    /** Đang ở chế độ thường (không có lệnh vẽ/sửa nào chạy) thì kéo chuột trái được dùng để xoay. */
+    private isIdle(view: IView): boolean {
+        const visual = view.document.visual;
+        const allow =
+            visual.eventHandler === visual.defaultEventHandler ||
+            (visual.eventHandler as { allowLeftRotate?: boolean }).allowLeftRotate === true;
+        return allow && !view.document.application.executingCommand;
+    }
+
+    private handleLeftDrag(view: IView, event: PointerEvent): boolean {
+        if (event.buttons !== MOUSE_LEFT || !this._leftStart) return false;
+        if (!this._leftRotating) {
+            const d = Math.hypot(event.offsetX - this._leftStart.x, event.offsetY - this._leftStart.y);
+            if (d < LEFT_DRAG_THRESHOLD) return true;
+            this._leftRotating = true;
+            (view.document.visual.eventHandler as { cancelPointerGesture?: () => void }).cancelPointerGesture?.();
+            view.cameraController.startRotate(this._leftStart.x, this._leftStart.y);
+            this._offsetPoint = { ...this._leftStart };
+        }
+        const dx = event.offsetX - this._offsetPoint!.x;
+        const dy = event.offsetY - this._offsetPoint!.y;
+        this._offsetPoint = { x: event.offsetX, y: event.offsetY };
+        if (event.shiftKey || event.ctrlKey) view.cameraController.pan(dx, dy);
+        else if (this.canRotate) view.cameraController.rotate(dx, dy);
+        return true;
+    }
+
     private handleMouseMove(view: IView, event: PointerEvent) {
+        if (this.handleLeftDrag(view, event)) return;
+        if (event.buttons === MOUSE_RIGHT) {
+            if (!this._offsetPoint) return;
+            const dx = event.offsetX - this._offsetPoint.x;
+            const dy = event.offsetY - this._offsetPoint.y;
+            this._offsetPoint = { x: event.offsetX, y: event.offsetY };
+            if (event.shiftKey || event.ctrlKey) view.cameraController.pan(dx, dy);
+            else if (this.canRotate) view.cameraController.rotate(dx, dy);
+            return;
+        }
         if (event.buttons !== MOUSE_MIDDLE) {
             return;
         }
@@ -147,10 +192,16 @@ export class ThreeViewHandler implements IEventHandler {
     }
 
     private handleMouseDown(event: PointerEvent, view: IView) {
+        this._leftRotating = false;
+        this._leftStart =
+            event.buttons === MOUSE_LEFT && this.isIdle(view) ? { x: event.offsetX, y: event.offsetY } : undefined;
         if (this._lastDown && this._lastDown.time + 500 > Date.now() && event.buttons === MOUSE_MIDDLE) {
             this._lastDown = undefined;
             view.cameraController.fitContent();
             view.update();
+        } else if (event.buttons === MOUSE_RIGHT) {
+            view.cameraController.startRotate(event.offsetX, event.offsetY);
+            this._offsetPoint = { x: event.offsetX, y: event.offsetY };
         } else if (event.buttons === MOUSE_MIDDLE) {
             view.cameraController.startRotate(event.offsetX, event.offsetY);
             this._lastDown = {
@@ -170,6 +221,8 @@ export class ThreeViewHandler implements IEventHandler {
 
     pointerOut(view: IView, event: PointerEvent): void {
         this._lastDown = undefined;
+        this._leftStart = undefined;
+        this._leftRotating = false;
         this.lastPointerEventMap.delete(event.pointerId);
         this.currentPointerEventMap.delete(event.pointerId);
     }
@@ -182,6 +235,8 @@ export class ThreeViewHandler implements IEventHandler {
             }, 500);
         }
         this._offsetPoint = undefined;
+        this._leftStart = undefined;
+        this._leftRotating = false;
         this.lastPointerEventMap.delete(event.pointerId);
         this.currentPointerEventMap.delete(event.pointerId);
     }

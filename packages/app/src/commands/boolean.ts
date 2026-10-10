@@ -37,8 +37,14 @@ export abstract class BooleanOperate extends MultistepCommand {
                 PubSub.default.pub("showToast", "error.default:{0}", booleanShape.error);
                 return;
             }
-            const node = new BooleanNode({ document: this.document, booleanShape: booleanShape.value });
-            this.document.modelManager.rootNode.add(node);
+            // Giữ tên và vị trí (thư mục) của khối chính, để "Thân hộp"/"Nắp hộp" vẫn đúng tên sau khi gộp/khoét
+            const first = this.stepDatas[0].nodes?.[0];
+            const node = new BooleanNode({
+                document: this.document,
+                booleanShape: booleanShape.value,
+                name: first?.name,
+            });
+            (first?.parent ?? this.document.modelManager.rootNode).add(node);
             if (this.keepTools) {
                 this.stepDatas[0].nodes?.forEach((x) => x.parent?.remove(x));
             } else {

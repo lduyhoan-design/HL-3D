@@ -1,12 +1,29 @@
 .root {
+    /* khung trò chuyện luôn nền đen chữ trắng */
+    color-scheme: dark;
+    --chat-ink: #e6edf3;
+    --chat-paper: #101820;
+    --primary-color: #22c3d6;
+    --foreground-color: #e6edf3;
+    --foreground-secondary-color: #9fb0c0;
+    --foreground-muted-color: #6b7c8d;
+    --background-color: #101820;
+    --panel-background-color: #101820;
+    --control-background-color: #16202a;
+    --input-background-color: #16202a;
+    --input-text-color: #e6edf3;
+    --input-border-color: #2c3b4a;
+    --border-color: #1f2b37;
+    --hover-background-color: rgba(255, 255, 255, 0.08);
+    --active-background-color: rgba(255, 255, 255, 0.14);
     position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;
     min-height: 0;
     width: 100%;
-    background-color: var(--background-color);
-    color: var(--foreground-color);
+    background-color: var(--chat-paper);
+    color: var(--chat-ink);
     font-size: 12px;
     overflow: hidden;
 }
@@ -138,8 +155,8 @@
 
 .user {
     align-self: flex-end;
-    background: var(--hover-background-color);
-    color: var(--foreground-color);
+    background: var(--chat-ink);
+    color: var(--chat-paper);
     max-width: 85%;
     padding: 8px 14px;
     border-radius: 18px 18px 6px 18px;
@@ -453,8 +470,8 @@
 .composerCard {
     display: flex;
     flex-direction: column;
-    background: var(--panel-background-color);
-    border: 1px solid var(--input-border-color);
+    background: var(--chat-paper);
+    border: 1.5px solid var(--chat-ink);
     border-radius: 18px;
     transition: border-color 0.15s ease;
 }
@@ -504,9 +521,9 @@
     justify-content: center;
     width: 30px;
     height: 30px;
-    background: var(--input-background-color);
-    color: var(--input-text-color);
-    border: 1px solid var(--border-color);
+    background: var(--chat-ink);
+    color: var(--chat-paper);
+    border: 1px solid var(--chat-ink);
     border-radius: 50%;
     cursor: pointer;
     transition: opacity 0.15s ease;
@@ -518,7 +535,7 @@
 }
 
 .sendButton:hover {
-    background: var(--hover-background-color);
+    opacity: 0.8;
 }
 
 .sendButton:disabled {
@@ -897,4 +914,12 @@
 
 .askAnswer {
     color: var(--foreground-muted-color);
+}
+
+.waitClock {
+    margin-left: 8px;
+    font-size: 12px;
+    color: var(--foreground-muted-color);
+    font-variant-numeric: tabular-nums;
+    animation: none !important;
 }

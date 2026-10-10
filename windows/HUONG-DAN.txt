@@ -1,0 +1,114 @@
+HL 3D — phần mềm vẽ hộp in 3D (dựa trên Chili3D, Việt hoá)
+================================================
+
+MỞ APP
+- Cần Python 3 (python.org, khi cài tick "Add python.exe to PATH").
+- Lần đầu: bấm đúp TAO-BIEU-TUONG.bat để có biểu tượng "HL 3D" ngoài Desktop.
+- Sau đó bấm biểu tượng đó (hoặc MO-APP.bat). App mở thành cửa sổ riêng (Edge) tại http://127.0.0.1:8787
+- Không lên? Bấm CHAY-CO-CUA-SO-DEN.bat để xem dòng báo lỗi.
+
+CÁCH NHANH NHẤT: NÚT "THÊM MODULE"
+- Tab Hộp mạch > "Thêm module": bảng bên phải hiện thư viện module theo nhóm (Vi điều khiển, Truyền thông,
+  Nguồn, Relay / Driver, Khác). Bấm vào tên module là module vào hộp, hộp tự nới ra cho vừa.
+- Bấm ✕ ở module trong danh sách để bỏ. Bấm "Xong" để lưu.
+- ESP32 / ESP8266: đã tính sẵn vùng anten WiFi ở đầu bo (để trống, không chặn đầu bo), sóng không bị cản.
+
+TẠO HỘP BO MẠCH (tab "Hộp mạch")
+1. Màn hình đầu: bấm "Bản vẽ mới".
+2. Tab Hộp mạch > "Tạo hộp bo mạch".
+3. Thêm từng bo (ESP32, Arduino, relay, nguồn...). Bo tự xếp cạnh nhau, hộp tự lớn theo.
+   Bo cắm chồng lên bo trước (shield) thì tick "Chồng lên bo trên".
+   Bo không có trong danh sách: chọn "Bo khác (tự nhập)" rồi gõ kích thước.
+4. Chọn màn hình, đầu đọc thẻ gắn dưới nắp. Muốn hộp đúng cỡ mình muốn thì tick "Tự nhập kích thước".
+5. Bấm Đồng ý: ra "Thân hộp" và "Nắp hộp" là khối CAD thật. "Linh kiện tham khảo" chỉ để xem, không in.
+
+BẢNG "LÀM HỘP" (tự mở sau khi tạo hộp; mở lại bằng nút "Sửa hộp & lỗ")
+- Thêm lỗ: bấm + Nút nhấn, + Đèn LED, + Jack nguồn, + USB-C, + Công tắc, + Lỗ tròn.
+- Đổi kích thước hộp: ô "Kích thước hộp" ở đầu bảng. Bỏ tick "Tự tính vừa với bo mạch" rồi gõ
+  Dài / Rộng / Cao (mm, trong lòng hộp). Hình cập nhật ngay.
+- Dời lỗ bằng chuột: giữ chuột trái vào lỗ (hoặc khối trên nắp) rồi kéo tới chỗ muốn, thả ra.
+  Kéo ở chỗ khác thì vẫn xoay hộp như bình thường.
+- Dời lỗ bằng nút: bấm mũi tên ◀ ▲ ▼ ▶, chọn "Bước" 0.5 / 1 / 5 / 10 mm. Nút ● đưa lỗ về giữa.
+  Lỗ dời ngay trên hình. Muốn chính xác thì gõ số X, Cao (mm).
+- Đổi mặt khoét ở ô "Mặt" (nắp, trước, sau, trái, phải, đáy). "Số lỗ" > 1 để làm một hàng lỗ.
+- Thêm khối trên nắp: + Hộp nhỏ / Khối đặc / Trụ tròn, cũng dời bằng mũi tên.
+- Bấm "Xong" để lưu (Ctrl+Z để quay lại), "Huỷ" để bỏ.
+- Muốn sửa lại sau này: bấm "Sửa hộp & lỗ", mọi lỗ vẫn còn trong danh sách để dời tiếp.
+
+THANH "CẢ HỘP / CHỈ NẮP / CHỈ ĐÁY" (trên khung 3D)
+- Bấm "Chỉ đáy" để tháo nắp nhìn vào trong, "Chỉ nắp" để xem riêng nắp, "Cả hộp" để lắp lại.
+
+XOÁ
+- Bấm chọn dòng ở danh sách Đối tượng rồi bấm nút thùng rác (hoặc phím Delete, hoặc "Xóa đối tượng").
+
+CỔNG TỰ KHOÉT (USB, MẠNG LAN RJ45, RS232 DB9)
+- Chọn bo "ESP32...", "Module mạng LAN W5500 (cổng RJ45)", "Module RS232-TTL MAX3232 (cổng DB9)"...
+  Phần mềm tự đặt các bo có cổng sát THÀNH TRÁI và khoét lỗ cổng đúng chỗ.
+- Không muốn khoét một cổng (ví dụ USB): bảng "Làm hộp" > mục "Cổng tự khoét ở thành trái" > bỏ tick
+  cổng đó, thành hộp liền lại. Hoặc nhắn AI: "bỏ cái lỗ type C đi".
+- Tắt hết cổng: bỏ ô "Tự khoét lỗ cổng (USB, LAN, DB9) ở thành trái".
+- Lưu ý: xoá khối màu cam (hình cổng tham khảo) KHÔNG lấp được lỗ, vì lỗ khoét trong thân hộp.
+- Kích thước module là số tham khảo: W5500 55×28 mm, RS232 39×32 mm. Đo bo thật, sửa ô Dài/Rộng nếu khác.
+
+MÀN HÌNH (bảng "Làm hộp" > "Màn hình gắn dưới nắp")
+- Bấm tên nhóm (OLED, LCD, TFT màu, Nextion, E-paper, LED 7 đoạn / ma trận) rồi bấm tên màn hình.
+  Nắp tự khoét ô màn hình và có cọc bắt vít; hộp tự nới cho vừa. Bấm lại tên đó hoặc ✕ để bỏ.
+- Màn không có lỗ vít (OLED 0.91", TFT nhỏ, LED ma trận...): nắp có 4 gờ chặn góc, dán bo bằng keo.
+- Đưa chuột lên tên màn hình để xem kích thước bo, ô khoét, khoảng cách lỗ vít. Số là số tham khảo,
+  đo lại màn thật trước khi in bản chính.
+
+CHÂN BẮT BO CÓ REN (bảng "Làm hộp" > "Chân bắt bo mạch")
+- Vít tự ren (M2 / M2.5 / M3): vặn thẳng vào cọc nhựa. Nhanh, rẻ, tháo nhiều lần sẽ lờn.
+- Đai ốc cấy nhiệt (heat-set insert) M2 / M2.5 / M3: cọc có lỗ Ø3.2 / Ø3.6 / Ø4.0. In xong dùng mỏ hàn
+  khoảng 220°C ấn đai ốc đồng vào lỗ. Có ren thật, tháo lắp thoải mái.
+- Đai ốc lục giác giấu dưới đáy (M2.5 / M3): đáy hộp có hốc lục giác, nhét đai ốc vào, vít từ trên bo xuống.
+- Trụ đồng (M2.5 / M3): đáy có lỗ xuyên + hốc chìm đầu vít; mua trụ đồng dài đúng bằng ô "Cọc đỡ".
+- Ô "Vít nắp dùng đai ốc cấy nhiệt M3": 4 cọc góc hộp có lỗ Ø4.0 để cấy đai ốc cho vít nắp.
+- Nhắn AI cũng được: "làm chân bắt có lỗ ren M3", "dùng đai ốc đồng cho nắp".
+
+CHÂN BẮT BO (cột "Chân bắt" ở mỗi dòng bo)
+- 4 cọc vít ở góc / 2 cọc vít chéo / 2 cọc vít đầu sau / Lỗ Arduino Uno: cọc tròn Ø6 có lỗ mồi,
+  bắt vít tự ren vào. Chọn cỡ vít ở ô "Vít bắt bo" (M2 / M2.5 / M3).
+- "Lỗ cách mép": khoảng cách từ tâm lỗ trên bo đến mép bo (mm). Đo bo thật rồi gõ vào.
+- Chốt kẹp góc: cho bo không có lỗ (ESP32 DevKit, Nano, nguồn HLK). Bo nằm trên 4 đệm góc,
+  có thanh chặn cao hơn mặt bo 1.5 mm giữ không xê dịch. Lắp nắp xuống là bo được giữ chặt.
+- Không (dán keo): chỉ có 4 đệm kê, dán bo bằng keo nóng / băng keo 2 mặt.
+
+NHỜ AI LÀM HỘP
+- Gõ vào khung Trợ lý AI (cần API key, xem mục TRỢ LÝ AI), ví dụ: "làm cho anh cái hộp gồm ESP32, module mạng LAN, module RS232-TTL,
+  thêm 1 đèn LED ở mặt trước". AI tự chọn module, tạo hộp và khoét cổng.
+
+VẼ THÊM THEO Ý (ví dụ hộp nhỏ trên nắp, lỗ nút bấm)
+- "Bản phác mới" > bấm vào mặt nắp > vẽ Hình chữ nhật / Đường tròn > thoát bản phác.
+- "Đùn khối" > bấm vào hình vừa vẽ > kéo mũi tên lên (nổi khối) hoặc xuống (khoét lỗ), gõ số mm.
+- "Gộp khối": dính khối mới vào nắp. "Khoét (trừ khối)": đục lỗ.
+- Bo tròn cạnh / Vát cạnh cho đẹp.
+- Chuột: giữ chuột trái (hoặc chuột phải) vào hộp rồi kéo để xoay; Shift + kéo, hoặc kéo chuột giữa
+  để dời; lăn chuột để phóng to; bấm nhẹ không kéo để chọn khối; nhấp đúp chuột giữa để xem toàn bộ.
+
+ĐỒ ÁN (nhóm "Đồ án" trong tab Hộp mạch)
+- Lưu đồ án: lưu bản vẽ thành file .cd vào thư mục đồ án (mặc định thư mục do-an nằm cạnh MO-APP.bat).
+- Mở đồ án: danh sách đồ án đã lưu, bấm vào tên để mở. Có nút "Mở thư mục", "Đổi thư mục lưu…"
+  (chọn thư mục khác, ví dụ trên ổ D hay Google Drive), "Mở file khác…".
+- Thư mục đồ án: mở thẳng thư mục bằng File Explorer.
+- Nhập file (STL, STEP): đưa file 3D có sẵn vào bản vẽ.
+
+XUẤT FILE IN
+- Bấm "Xuất STL để in" trong tab Hộp mạch: ra 2 file "Thân hộp.stl" và "Nắp hộp.stl"
+  (nắp đã lật úp sẵn), lưu vào thư mục đồ án\STL và tự mở thư mục đó.
+- Chỉ muốn xuất một khối: bấm chọn khối đó trước rồi bấm "Xuất STL để in".
+- Khi gộp hoặc khoét bằng "Gộp khối"/"Khoét (trừ khối)", khối kết quả giữ nguyên tên "Thân hộp"/"Nắp hộp".
+- Kích thước linh kiện là số tham khảo, đo lại bo thật bằng thước kẹp trước khi in bản chính.
+
+TRỢ LÝ AI (khung bên phải)
+- Lỡ bấm ✕ tắt khung AI: tab Hộp mạch > nút "Trợ lý AI" (nhóm "Trợ lý", cuối bên phải) để bật lại.
+- Thanh công cụ dài quá màn hình: lăn chuột lên thanh công cụ để cuộn sang phải.
+- Gõ yêu cầu tiếng Việt, ví dụ: "khoét lỗ tròn 7mm ở giữa mặt trước thân hộp".
+- Lần đầu dùng: bấm bánh răng (Cài đặt) ở khung AI, chọn nhà cung cấp (Anthropic, OpenAI hoặc dịch vụ
+  tương thích OpenAI), dán API key CỦA BẠN. Phần mềm không kèm sẵn key nào; key chỉ lưu trong máy bạn.
+- Gửi hình cho AI: bấm dấu + ở khung chat, hoặc chụp màn hình rồi bấm Ctrl+V vào ô chat.
+
+GIẤY PHÉP
+Chili3D là phần mềm mã nguồn mở AGPL-3.0 (github.com/xiangechen/chili3d). Bản này đã Việt hoá và
+thêm tab Hộp mạch. Dùng thoải mái; nếu đưa bản sửa đổi cho người khác dùng thì phải kèm mã nguồn
+(mã nguồn đầy đủ của bản này có trên GitHub, xem README).

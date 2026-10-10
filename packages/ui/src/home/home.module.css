@@ -618,3 +618,43 @@
         }
     }
 }
+
+.guideList {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.guideItem {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+.guideNum {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-weight: 600;
+    font-size: 13px;
+    color: #fff;
+    background: var(--primary-color, #2f80ed);
+}
+.guideTitle {
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+.guideText {
+    font-size: 13px;
+    line-height: 1.5;
+    opacity: 0.75;
+}
+
+:global(.hlem) {
+    font-style: normal;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}

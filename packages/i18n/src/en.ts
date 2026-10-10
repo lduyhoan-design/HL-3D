@@ -7,6 +7,37 @@ export default {
     display: "English",
     language: "en",
     translation: {
+        "command.enclosure.addModule": "Add module",
+        "command.project.save": "Save project",
+        "command.project.open": "Open project",
+        "command.project.folder": "Project folder",
+        "ribbon.group.project": "Project",
+        "ribbon.group.assistant": "Assistant",
+        "command.enclosure.edit": "Edit box & holes",
+        "ribbon.group.enclosureActs": "Actions",
+        "command.enclosure.toggleLid": "Show / hide lid",
+        "command.enclosure.hole": "Cut hole",
+        "command.enclosure.exportStl": "Export STL for print",
+        "toast.message{0}": "{0}",
+        "home.guide": "Quick start",
+        "home.guide.s1.title": "Create a PCB enclosure",
+        "home.guide.s1.text":
+            "New Document → Enclosure tab → PCB Enclosure. Add boards, a screen and a card reader; the box sizes itself.",
+        "home.guide.s2.title": "Quick holes",
+        "home.guide.s2.text":
+            "“Cut hole” in the Enclosure tab: pick a face and type the position and size in mm.",
+        "home.guide.s3.title": "Draw your own",
+        "home.guide.s3.text":
+            "New Sketch → click a face → draw → Extrude and drag the arrow up to add or down to cut.",
+        "home.guide.s4.title": "Export for printing",
+        "home.guide.s4.text":
+            "“Export STL for print” saves the body and the flipped lid as two files for your slicer.",
+        "home.guide.s5.title": "Ask the AI assistant",
+        "home.guide.s5.text":
+            "Type a request in the right panel, e.g. “cut a 7mm round hole in the middle of the front face”.",
+        "command.enclosure.create": "PCB Enclosure",
+        "ribbon.tab.enclosure": "Enclosure",
+        "ribbon.group.enclosure": "3D-print box",
         "ai.apiKey": "API Key",
         "ai.apiKeyHint":
             "The key is never written to this browser's storage. Save it with your password manager when prompted, or enter it once per session.",

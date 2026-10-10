@@ -100,5 +100,10 @@ export default defineConfig({
     },
     output: {
         clean: true,
+        // Tên file có mã băm: mỗi bản cập nhật là tên mới, trình duyệt không dùng nhầm bản cũ đã lưu đệm
+        filename: "[name].[contenthash:8].js",
+        chunkFilename: "[name].[contenthash:8].js",
+        cssFilename: "[name].[contenthash:8].css",
+        cssChunkFilename: "[name].[contenthash:8].css",
     },
 });

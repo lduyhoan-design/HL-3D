@@ -228,7 +228,7 @@
     padding: 2px 0;
 
     &::-webkit-scrollbar {
-        height: 6px;
+        height: 10px;
     }
 
     &::-webkit-scrollbar-thumb {

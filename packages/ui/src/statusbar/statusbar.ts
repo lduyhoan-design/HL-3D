@@ -47,8 +47,13 @@ export class Statusbar extends HTMLElement {
     private readonly setDefaultTip = () => {
         this._isDefaultTip = true;
         const { pan, rotate } = Navigation3D.navigationKeyMap();
-        I18n.set(this.tip, "textContent", "prompt.default{0}{1}", pan, rotate);
+        I18n.set(this.tip, "textContent", "prompt.default{0}{1}", mouseName(pan), mouseName(rotate));
     };
+}
+
+function mouseName(keys: string): string {
+    const t = I18n.translate("mouse.middle" as I18nKeys);
+    return t && t !== "mouse.middle" ? keys.replace("Middle", t) : keys;
 }
 
 customElements.define("chili-statusbar", Statusbar);

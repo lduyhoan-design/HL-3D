@@ -20,6 +20,7 @@ export class ToolBar extends HTMLElement {
             { icon: "icon-folder-plus", tip: "items.tool.newFolder", command: this.newGroup },
             { icon: "icon-unexpand", tip: "items.tool.unexpandAll", command: this.unExpandAll },
             { icon: "icon-expand", tip: "items.tool.expandAll", command: this.expandAll },
+            { icon: "icon-trash", tip: "items.tool.delete", command: this.deleteSelected },
         ];
         buttons.forEach(({ icon, tip, command }) => this.button(icon, tip as I18nKeys, command));
     }
@@ -39,6 +40,10 @@ export class ToolBar extends HTMLElement {
 
     private readonly newGroup = () => {
         PubSub.default.pub("executeCommand", "create.folder");
+    };
+
+    private readonly deleteSelected = () => {
+        PubSub.default.pub("executeCommand", "modify.deleteNode");
     };
 
     private readonly expandAll = () => {

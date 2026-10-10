@@ -1,231 +1,86 @@
-# Chili3D
+# HL 3D — phần mềm vẽ 3D tiếng Việt, có tab làm hộp cho bo mạch
 
-A browser-based 3D CAD application for online model design and editing.
+Phần mềm **vẽ 3D (CAD) đầy đủ, miễn phí, giao diện tiếng Việt**, chạy ngay trên máy. Vẽ được chi tiết cơ khí,
+đồ gá, vỏ máy, đồ in 3D... và có thêm **tab Hộp mạch dành riêng cho anh em làm điện tử**: chọn ESP32, Arduino,
+relay, nguồn, màn hình là phần mềm tự dựng hộp, tự khoét cổng, xuất STL đem in.
 
-![Screenshot](./screenshots/screenshot.png)
+Dựa trên [Chili3D](https://github.com/xiangechen/chili3d) (mã nguồn mở AGPL-3.0) của tác giả xiangechen.
 
-## Overview
+![Tab Hộp mạch](./screenshots/hl3d-hop-mach.png)
 
-[Chili3D](https://chili3d.com) is an [open-source](https://github.com/xiangechen/chili3d) browser-based 3D CAD (Computer-Aided Design) application built with TypeScript. It achieves near-native performance by compiling OpenCascade (OCCT) to WebAssembly and integrating with Three.js, enabling powerful online modeling, editing, and rendering — all without requiring local installation.
+## Có gì trong bản này
 
-You can access Chili3D online at:
+### Vẽ 3D đầy đủ (tiếng Việt toàn bộ)
 
-- Official website: [chili3d.com](https://chili3d.com)
-- Cloudflare deployment: [chili3d.pages.dev](https://chili3d.pages.dev)
+- **Khối cơ bản**: hộp, trụ, nón, cầu, chóp, xuyến...
+- **Bản phác 2D**: đường thẳng, cung, tròn, elip, chữ nhật, đa giác, đường cong Bézier; ràng buộc kích thước.
+- **Dựng khối**: đùn, xoay tròn, quét theo đường, nối biên dạng (loft), tạo vỏ mỏng, offset.
+- **Gộp / khoét / giao khối** (boolean), bo tròn cạnh, vát cạnh, cắt, tách, khâu mặt.
+- **Biến đổi**: dời, xoay, đối xứng, nhân bản theo hàng, theo vòng tròn.
+- **Mô hình tham số** (tab Tham số): sửa số đo ở bước trước, cả chuỗi dựng tự cập nhật.
+- **Bắt điểm** chính xác: điểm cuối, trung điểm, tâm, vuông góc, tiếp tuyến...; mặt phẳng làm việc động.
+- **Đo** chiều dài, góc, diện tích, thể tích.
+- **Nhập / xuất** STEP, IGES, BREP, STL; Hoàn tác / Làm lại không giới hạn.
 
-## Features
+### Tab Hộp mạch cho anh em điện tử
 
-### Modeling Tools
+- Bấm **Thêm module** → chọn module trong thư viện, hộp tự xếp bo và tự nới kích thước.
+  - Thư viện module: ESP32 / ESP32-S3 / C3 / CAM, ESP8266, Arduino Uno / Mega / Nano, Pico, mạng LAN W5500 /
+    ENC28J60, RS232, RS485, LoRa, SIM800L, thẻ nhớ, nguồn hạ áp, HLK 220V, pin 18650, relay 1–8 kênh,
+    L298N, MOSFET, HX711, DS3231...
+  - **Tự khoét cổng** USB, RJ45, DB9, SMA ở thành hộp; chừa sẵn vùng anten WiFi cho ESP32 / ESP8266.
+  - **Thư viện màn hình gắn dưới nắp** (hơn 35 loại): OLED 0.91" – 2.42", LCD 1602 / 2004 / 12864 / Nokia 5110,
+    TFT 0.96" – 4.0" (cả màn tròn GC9A01 và ESP32 CYD 2.8"), Nextion 2.4" – 7", giấy điện tử 1.54" – 4.2",
+    LED 7 đoạn TM1637 / MAX7219, LED ma trận. Nắp tự khoét ô màn và có cọc bắt vít (hoặc gờ chặn góc
+    cho màn không có lỗ).
+  - Đầu đọc thẻ RC522, PN532 gắn dưới nắp.
+  - **Chân bắt bo có ren**: vít tự ren M2 / M2.5 / M3, **đai ốc đồng cấy nhiệt** (heat-set insert),
+    **đai ốc lục giác giấu dưới đáy**, **trụ đồng**; chốt kẹp góc cho bo không có lỗ. Vít nắp cũng chọn
+    được đai ốc cấy nhiệt.
+  - Thêm lỗ nút nhấn, LED, jack nguồn, USB-C, công tắc, lỗ tròn; **kéo lỗ bằng chuột** hoặc nút mũi tên.
+  - Xem **Cả hộp / Chỉ nắp / Chỉ đáy**; **Xuất STL để in** ra sẵn thân hộp và nắp (nắp đã lật úp).
 
-- **Basic Shapes**: Create boxes, cylinders, cones, spheres, pyramids, torus, and more
-- **2D Sketching**: Draw lines, arcs, circles, ellipses, rectangles, polygons, and Bézier curves
-- **Advanced Operations**:
-    - Boolean operations (union, difference, intersection)
-    - Extrusion and revolution
-    - Sweeping and lofting
-    - Offset surfaces and thick solid
-    - Linear and circular arrays
-    - Shape checking and repair
+### Khác
 
-### Snapping and Tracking
+- **Lưu / mở đồ án** vào thư mục trên máy (khi chạy bằng `server.py` kèm theo).
+- **Trợ lý AI** biết làm hộp: gõ "làm cho anh cái hộp gồm ESP32, module relay 2 kênh, màn OLED, thêm 1 LED ở
+  mặt trước" là AI tự tạo. AI dùng **API key của chính bạn** (Anthropic, OpenAI hoặc dịch vụ tương thích
+  OpenAI), nhập trong khung Trợ lý AI > Cài đặt. Phần mềm không kèm key nào.
+- Chuột kiểu quen thuộc: giữ chuột trái / phải kéo để xoay, Shift + kéo để dời, lăn để phóng to.
 
-- **Object Snapping**: Precisely snap to geometric features (points, edges, faces)
-- **Workplane Snapping**: Snap to the current workplane for accurate planar operations
-- **Axis Tracking**: Create objects along tracked axes for precise alignment
-- **Feature Point Detection**: Automatically detect and snap to key geometric features
-- **Tracking Visualization**: Visual guides showing tracking lines and reference points
+> Kích thước module và màn hình là **số tham khảo** theo loại phổ biến trên thị trường. Hãy đo bo thật bằng
+> thước kẹp và sửa lại trước khi in bản chính.
 
-### Editing Tools
+## Tải về và dùng (Windows)
 
-- **Modification**: Chamfer, fillet, trim, break, split, sew, simplify
-- **Transformation**: Move, rotate, mirror, linear array, circular array
-- **Advanced Editing**:
-    - Feature removal
-    - Sub-shape manipulation
-    - Explode compound objects
+1. Cài [Python 3](https://www.python.org/downloads/) (khi cài nhớ tick **Add python.exe to PATH**).
+2. Vào mục [**Releases**](https://github.com/lduyhoan-design/HL-3D/releases/latest) của trang này, tải file `HL3D-windows.zip`, giải nén ra một thư mục (ví dụ `D:\HL3D`).
+3. Bấm đúp **TAO-BIEU-TUONG.bat** để có biểu tượng "HL 3D" ngoài Desktop, sau đó mở app bằng biểu tượng đó
+   (hoặc bấm **MO-APP.bat**). App mở thành cửa sổ riêng tại `http://127.0.0.1:8787`.
+4. Không lên? Bấm **CHAY-CO-CUA-SO-DEN.bat** để xem dòng báo lỗi.
 
-### Measurement Tools
+Hướng dẫn chi tiết từng nút: xem file `HUONG-DAN.txt` trong gói tải về.
 
-- Measure angles and lengths
-- Calculate the sum of length, area, and volume
+## Tự build từ mã nguồn
 
-### Document Management
-
-- Create, open, and save documents
-- Full undo/redo stack with transaction history
-- Import/export of industry-standard formats (STEP, IGES, BREP, STL)
-
-### User Interface
-
-- Office-style ribbon interface with contextual command organization
-- Hierarchical assembly management with flexible grouping capabilities
-- Dynamic workplane support
-- 3D viewport with camera controls and camera position recall
-- Command context panel integrated into the viewport
-
-### Plugin System
-
-Chili3D supports a runtime plugin system with dynamic loading via URL parameters (`?plugin=`). Example plugins include:
-
-- **helloworld-js** / **helloworld-ts** — Demo plugins showcasing the plugin API
-- **macro** — Create, edit, and run macros to automate repetitive tasks
-- **visual-programming** — Visual programming with a node-based editor (powered by Rete.js)
-
-### Localization
-
-- **Multi-Language Support**: Built-in internationalization (i18n) with seamless locale switching
-- **Current Languages**: Chinese (zh-cn), English (en), Portuguese — Brazil (pt-br)
-- Contributions for additional languages are welcome
-
-## Architecture
-
-Chili3D uses an npm workspace monorepo under `packages/` with an interface-driven, pluggable backend architecture:
-
-```
-web ──> builder ──> app ──> core
-                  ──> i18n ──> core
-                  ──> three ──> core
-                  ──> ui ──> core + element
-                  ──> wasm ──> core
-                  ──> storage ──> core
-
-element ──> core
-```
-
-- **`core`** — Abstract interfaces (`IShape`, `IShapeFactory`), math (`XYZ`, `Matrix4`, `Plane`), document model, reactive data (`Observable`, `Binding`, `PubSub`), `Result<T,E>`, transactions/undo/redo, commands, serialization, plugin system, service container, UI abstractions
-- **`wasm`** — Concrete `ShapeFactory` calling into OCCT via Emscripten bindings
-- **`three`** — Three.js viewport, camera controller, visual objects, highlighter, outline pass, gizmo, mesh export
-- **`element`** — Custom reactive DOM elements (radio groups, expanders, data converters)
-- **`ui`** — Application chrome: main window, ribbon/toolbar, property panels, project tree, dialogs, toast, status bar
-- **`app`** — Concrete `Application`, body node classes, command implementations, `CommandService`, `HotkeyService`
-- **`builder`** — `AppBuilder` with a fluent `.useIndexedDB().useWasmOcc().useThree().useUI().build()` chain and default ribbon layout
-- **`i18n`** — Locale data (en, zh-cn, pt-br)
-- **`storage`** — IndexedDB persistence layer
-- **`web`** — Entry point: calls `AppBuilder`, shows loading screen, parses URL parameters
-
-## Technology Stack
-
-- **Frontend**: TypeScript, Three.js (0.184)
-- **3D Kernel**: OpenCascade 8.0.0 (OCCT) compiled to WebAssembly via Emscripten
-- **Bundler**: Rspack 2
-- **Linting & Formatting**: Biome (TypeScript), clang-format (C++)
-- **Testing**: Rstest + Happy-DOM
-- **Package Manager**: npm workspaces
-
-## Changelog
-
-You can view the full changelog [here](https://github.com/xiangechen/chili3d/releases).
-
-For Chinese users, you can also browse the [media](https://space.bilibili.com/539380032/lists/3108412?type=season).
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js
-- npm
-
-### Installation
-
-1. Clone the repository
-
-    ```bash
-    git clone https://github.com/xiangechen/chili3d.git
-    cd chili3d
-    ```
-
-2. Install dependencies
-
-    ```bash
-    npm install
-    ```
-
-### Development
-
-Start the development server:
+Cần Node.js 20 trở lên.
 
 ```bash
-npm run dev   # Launches at http://localhost:8080
+git clone https://github.com/lduyhoan-design/HL-3D.git
+cd HL-3D
+npm ci
+npm run build          # ra thư mục dist/
+npm run dev            # hoặc chạy thử tại http://localhost:8080
 ```
 
-### Building
+Muốn chạy kiểu Windows như bản tải về: chép `dist/` thành `windows/app/` rồi bấm `windows/MO-APP.bat`.
 
-Build the application:
+Mã phần Hộp mạch nằm ở `packages/app/src/commands/enclosure.ts` (thư viện module, màn hình, chân bắt ở đầu file),
+bản dịch tiếng Việt ở `packages/i18n/src/vi.ts`.
 
-```bash
-npm run build
-```
+## Giấy phép
 
-### WASM Build (Optional)
+AGPL-3.0, giống Chili3D gốc (xem file `LICENSE`). Bạn được dùng, sửa, chia sẻ thoải mái; nếu đưa bản đã sửa cho
+người khác dùng (kể cả qua mạng) thì phải công khai mã nguồn bản sửa đó theo cùng giấy phép.
 
-The prebuilt WASM module is included in the repository. If you want to build it from source:
-
-1. Set up WebAssembly dependencies (one-time setup):
-
-    ```bash
-    npm run setup:wasm
-    ```
-
-2. Build the WebAssembly module:
-
-    ```bash
-    npm run build:wasm
-    ```
-
-### Testing & Linting
-
-```bash
-npm run test    # Run all tests (Rstest + Happy-DOM)
-npm run testc   # Tests with coverage
-npm run check   # Biome lint + auto-fix
-npm run format  # Biome + clang-format across all files
-```
-
-### Docker
-
-You can also deploy with Docker:
-
-```bash
-docker compose up -d   # Builds and serves the app at http://localhost:8080
-```
-
-## Code Style
-
-- **TypeScript**: Biome for linting and formatting — 4-space indent, 110-char line width, double quotes, semicolons always
-- **C++**: clang-format with WebKit style
-- Interfaces prefixed with `I` (`IShape`, `ICommand`)
-- `camelCase` functions/variables, `PascalCase` classes, `UPPER_SNAKE_CASE` constants
-- Type-only imports: `import type { IFoo } from "..."`
-- Pre-commit hooks via simple-git-hooks + lint-staged
-
-## Contributing
-
-We welcome contributions! Please feel free to submit pull requests or open issues.
-
-Before submitting a PR, run `npm run check` to ensure your code passes linting.
-
-## Contact
-
-- **Discussions**: Join our [GitHub discussions](https://github.com/xiangechen/chili3d/discussions) for general chat or questions
-- **Issues**: Use [GitHub issues](https://github.com/xiangechen/chili3d/issues) to report suggestions or bugs
-- **Email**: Contact us privately at xiangetg@msn.cn
-
-## License
-
-Distributed under the GNU Affero General Public License v3.0 (AGPL-3.0). For commercial licensing options, contact xiangetg@msn.cn.
-
-Full license details: [LICENSE](LICENSE)
-
-The C++ WASM module (`cpp/`) is licensed under LGPL-3.0.
-
-## Analytics Notice
-
-Chili3D uses [Microsoft Clarity](https://clarity.microsoft.com) for growth analytics. To disable data collection, remove the Clarity script from `public/index.html`.
-
-## Disclaimer
-
-This software is provided "AS IS," and the authors and contributors hereby disclaim all express and implied warranties. The user shall bear full responsibility for any and all risks and potential consequences arising from the use of this software. Such risks and consequences include, but are not limited to:
-
-1. Data loss, system failures, or any direct or indirect damages;
-2. Conduct violating applicable laws or regulations resulting from software usage and its consequences;
-3. All liabilities arising from the software's use for illegal purposes or activities.
+README gốc của Chili3D (tiếng Anh): [README.chili3d.md](./README.chili3d.md)

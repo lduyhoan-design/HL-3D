@@ -14,6 +14,7 @@ import {
 export interface BooleanOptions {
     document: IDocument;
     booleanShape: IShape;
+    name?: string;
 }
 
 @serializable()

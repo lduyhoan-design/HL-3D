@@ -68,7 +68,7 @@ export class Home extends HTMLElement {
         return false;
     }
 
-    private async getVideoData(): Promise<VideoData> {
+    protected async getVideoData(): Promise<VideoData> {
         if (videoDataCache) return videoDataCache;
         try {
             const response = await fetch("/videos.json");
@@ -87,8 +87,7 @@ export class Home extends HTMLElement {
 
     async render() {
         const documents = await this.getDocuments();
-        const videoData = await this.getVideoData();
-        this.append(this.leftSection(), this.rightSection(documents, videoData));
+        this.append(this.leftSection(), this.rightSection(documents));
         this.app.mainWindow?.appendChild(this);
     }
 
@@ -110,11 +109,11 @@ export class Home extends HTMLElement {
     private logoSection() {
         return div(
             { className: style.logo },
-            svg({ icon: "icon-chili" }),
+            img({ src: "hl-icon.png", style: "width:34px;height:34px;border-radius:8px" } as any),
             div(
                 { className: style.logoText },
-                span({ className: style.wordmark, textContent: "CHILI3D" }),
-                span({ className: style.version, textContent: `v${__APP_VERSION__}` }),
+                span({ className: style.wordmark, innerHTML: '<em class="hlem">HL</em> 3D' } as any),
+                span({ className: style.version, textContent: `Chili3D v${__APP_VERSION__}` }),
             ),
         );
     }
@@ -193,29 +192,17 @@ export class Home extends HTMLElement {
                 svg({ icon: "icon-github" }),
                 label({ textContent: "GitHub" }),
             ),
-            button(
-                {
-                    className: style.socialItem,
-                    onclick: () => {
-                        PubSub.default.pub("executeCommand", "wechat.group");
-                    },
-                },
-                svg({
-                    icon: "icon-wechatGroup",
-                }),
-                label({ textContent: new Localize("command.wechat.group") }),
-            ),
         );
     }
 
-    private rightSection(documents: ObservableCollection<RecentDocumentDTO>, videoData: VideoData) {
+    private rightSection(documents: ObservableCollection<RecentDocumentDTO>) {
         return div(
             { className: style.right },
             div(
                 { className: style.page },
                 div(
                     { className: style.header },
-                    div({ className: style.welcome, textContent: new Localize("home.welcome") }),
+                    div({ className: style.welcome, textContent: "HL 3D — thiết kế hộp in 3D" }),
                     div({ className: style.subtitle, textContent: new Localize("home.welcome.subtitle") }),
                 ),
                 div(
@@ -225,13 +212,41 @@ export class Home extends HTMLElement {
                         div({ className: style.sectionTitle, textContent: new Localize("home.recent") }),
                         this.documentCollection(documents),
                     ),
-                    this.videoColumn(videoData),
+                    this.guideColumn(),
                 ),
             ),
         );
     }
 
-    private videoColumn(videoData: VideoData) {
+    private guideColumn() {
+        const steps: [string, string][] = [
+            ["home.guide.s1.title", "home.guide.s1.text"],
+            ["home.guide.s2.title", "home.guide.s2.text"],
+            ["home.guide.s3.title", "home.guide.s3.text"],
+            ["home.guide.s4.title", "home.guide.s4.text"],
+            ["home.guide.s5.title", "home.guide.s5.text"],
+        ];
+        return div(
+            { className: style.videoColumn },
+            div({ className: style.sectionTitle, textContent: new Localize("home.guide" as I18nKeys) }),
+            div(
+                { className: style.guideList },
+                ...steps.map(([t, d], i) =>
+                    div(
+                        { className: style.guideItem },
+                        span({ className: style.guideNum, textContent: String(i + 1) }),
+                        div(
+                            {},
+                            div({ className: style.guideTitle, textContent: new Localize(t as I18nKeys) }),
+                            div({ className: style.guideText, textContent: new Localize(d as I18nKeys) }),
+                        ),
+                    ),
+                ),
+            ),
+        );
+    }
+
+    protected videoColumn(videoData: VideoData) {
         const sections = (
             [
                 ["home.videos.recent", videoData.recent],

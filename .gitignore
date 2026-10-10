@@ -7,3 +7,9 @@ coverage
 .clang-format
 CMakeUserPresets.json
 types
+# ban chay Windows
+windows/app
+windows/do-an
+windows/cau-hinh.json
+windows/nhat-ky.txt
+windows/__pycache__

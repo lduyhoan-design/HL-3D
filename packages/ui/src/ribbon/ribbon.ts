@@ -20,7 +20,7 @@ import {
     type RibbonTab,
     type RibbonTabKeys,
 } from "@chili3d/core";
-import { a, collection, createIcon, div, label, span, svg } from "@chili3d/element";
+import { a, collection, createIcon, div, img, label, span, svg } from "@chili3d/element";
 import style from "./ribbon.module.css";
 import { RibbonPushButton } from "./ribbonButton";
 import { RibbonGroupElement } from "./ribbonGroup";
@@ -94,8 +94,12 @@ export class RibbonUI extends HTMLElement {
             { className: style.left },
             div(
                 { className: style.appIcon, onclick: () => PubSub.default.pub("displayHome", true) },
-                svg({ className: style.icon, icon: "icon-chili" }),
-                span({ id: "appName", textContent: `Chili3D - v${__APP_VERSION__}` }),
+                img({ src: "hl-icon.png", style: "width:24px;height:24px;border-radius:6px" } as any),
+                span({
+                    id: "appName",
+                    textContent: "HL 3D",
+                    title: `Dựa trên Chili3D v${__APP_VERSION__} (mã nguồn mở AGPL-3.0)`,
+                }),
             ),
             div(
                 { className: style.ribbonTitlePanel },
@@ -190,11 +194,22 @@ export class RibbonUI extends HTMLElement {
     }
 
     private ribbonTabs() {
-        return collection({
+        const panel = collection({
             className: style.tabContentPanel,
             sources: this.dataContent.tabs,
             template: (tab: RibbonTab) => this.ribbonTab(tab),
         });
+        // lăn chuột trên thanh công cụ thì cuộn ngang, để thấy các nút bị khuất bên phải
+        panel.addEventListener(
+            "wheel",
+            (e: WheelEvent) => {
+                if (panel.scrollWidth <= panel.clientWidth || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+                panel.scrollLeft += e.deltaY;
+                e.preventDefault();
+            },
+            { passive: false },
+        );
+        return panel;
     }
 
     private ribbonTab(tab: RibbonTab) {
