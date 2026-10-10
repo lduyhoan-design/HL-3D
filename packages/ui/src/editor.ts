@@ -82,7 +82,40 @@ export class Editor extends HTMLElement {
         return chat;
     }
 
+    /** Nút nổi "Trợ lý AI" ở góc phải, hiện khi khung AI đang tắt để bấm mở lại. */
+    private reopenChatButton?: HTMLButtonElement;
+    private showReopenButton() {
+        if (this.reopenChatButton || this.chatDock || this.floatingChat) return;
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = "✦ Trợ lý AI";
+        btn.title = "Mở lại khung Trợ lý AI";
+        Object.assign(btn.style, {
+            position: "fixed",
+            right: "16px",
+            bottom: "44px",
+            zIndex: "60",
+            padding: "8px 14px",
+            borderRadius: "999px",
+            border: "none",
+            cursor: "pointer",
+            fontWeight: "700",
+            fontSize: "13px",
+            color: "#fff",
+            background: "var(--primary-color, #0ea5b7)",
+            boxShadow: "0 4px 14px rgba(0,0,0,.35)",
+        });
+        btn.addEventListener("click", () => this.showChat());
+        this.reopenChatButton = btn;
+        this.app.mainWindow?.appendChild(btn);
+    }
+    private hideReopenButton() {
+        this.reopenChatButton?.remove();
+        this.reopenChatButton = undefined;
+    }
+
     private showChat() {
+        this.hideReopenButton();
         if (this.chatDock || this.floatingChat) return;
         const chat = this.ensureChatPanel();
         chat.setFloating(false);
@@ -100,6 +133,7 @@ export class Editor extends HTMLElement {
         this.chatDock?.remove();
         this.chatDock = undefined;
         this.closeFloatingChat();
+        this.showReopenButton();
     }
 
     private closeFloatingChat() {
@@ -162,6 +196,7 @@ export class Editor extends HTMLElement {
             y: Math.max(0, mouseY - 16),
             onClose: () => {
                 this.floatingChat = undefined;
+                this.showReopenButton();
             },
         });
         this.app.mainWindow?.appendChild(this.floatingChat);
@@ -231,6 +266,7 @@ export class Editor extends HTMLElement {
         this.chatDock?.remove();
         this.chatDock = undefined;
         this.closeFloatingChat();
+        this.hideReopenButton();
     }
 
     private readonly openContext = (command: ICommand) => {

@@ -20,7 +20,7 @@ import { Home } from "./home";
 import { Permanent } from "./permanent";
 import { Toast } from "./toast";
 
-const quickCommands: CommandKeys[] = ["doc.save", "doc.saveToFile", "edit.undo", "edit.redo"];
+const quickCommands: CommandKeys[] = ["doc.save", "doc.saveToFile", "edit.undo", "edit.redo", "ai.toggleChat"];
 
 export class MainWindow extends HTMLElement implements IWindow {
     readonly ribbon: Ribbon;
