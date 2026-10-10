@@ -28,7 +28,7 @@ export function buildEnclosureTools(): Tool[] {
                 `Board presets: ${list(presets?.["boards"])}. ` +
                 `Screens under the lid: ${list(presets?.["screens"])}. Card readers under the lid: ${list(presets?.["readers"])}. ` +
                 `Extra hole presets: ${list(presets?.["holes"])}. ` +
-                `Board screw / thread options (argument screw): ${list(presets?.["screws"])}. 'lỗ ren'/'ren'/'cấy ren'/'đai ốc đồng'/'insert' → m3i (or m2i/m25i by size); 'đai ốc'/'ê cu' → m3n; 'trụ đồng'/'cọc đồng' → m3b; default m3. lid_insert=true when the user wants threaded inserts for the lid screws. ` +
+                `Board screw / thread options (argument screw): ${list(presets?.["screws"])}. 'lỗ ren'/'ren'/'cấy ren'/'đai ốc đồng'/'insert' → m3i (or m2i/m25i by size); 'đai ốc'/'ê cu' → m3n; 'trụ đồng'/'cọc đồng' → m3b; default m3. lid_insert=true when the user wants threaded inserts for the lid screws; screen_insert=true for threaded inserts in the posts that hold the screen / card reader under the lid ('màn hình bắt ren', 'cọc màn hình có ren'). ` +
                 "Screens: 'oled' alone → oled; 'oled nhỏ'/'0.91' → oled091; 'lcd 16x2'/'1602' → lcd1602 (with I2C → lcd1602i2c); '20x4' → lcd2004; 'nextion N inch' → nxNN; 'màn tròn' → tft128r; 'e-ink'/'giấy điện tử' → epd*; 'led 7 đoạn' → tm1637; 'ma trận led' → max7219m. " +
                 "Vietnamese wording → arguments: 'vừa vặn'/'vừa khít'/'gọn' → omit size (auto-fit); 'led 3 ly'/'led 3mm'/'led 3v nhỏ'/'led nhỏ' → hole preset led3; 'led 5 ly'/'led to' → led5; 'jack nguồn'/'jack DC'/'jắc nguồn' → dc55; 'nút nhấn'/'nút bấm' → btn12; 'công tắc' → kcd1; 'cổng mạng' → rj45; 'lỗ luồn dây' → cable. Faces: 'nắp'/'trên' → lid; 'mặt trước' → front; 'mặt sau' → back; 'bên trái' → left; 'bên phải' → right; 'bên hông'/'cạnh' without a side → right (the left wall already carries the module connectors); 'đáy' → bottom. Several holes of the same kind on one face → one entry with count and pitch (default 15 mm, centred). 'ESP32' without a model → esp32s3 if the user has used ESP32-S3 before, otherwise esp32; 'ESP8266'/'NodeMCU' → nodemcu; 'D1 mini' → wemos; 'relay N kênh' → relayN; 'cân'/'loadcell'/'HX711' → hx711; 'RS485' → rs485; 'sạc pin' → tp4056; 'pin 18650' → bat18650x1/x2; 'hạ áp' → lm2596; 'nguồn 220V' → hlkpm01. ESP32 presets already include the free space for the WiFi antenna. " +
                 "For a module that is not in the list use preset 'custom' with l/w (mm), pillar (standoff height) and comp (component height) — ask the user for its size if unknown. Map common names: 'module mạng LAN'/'W5500'/'Ethernet' → w5500; 'RS232'/'MAX3232'/'cổng COM' → rs232. Units mm.",
@@ -158,6 +158,7 @@ export function buildEnclosureTools(): Tool[] {
                     reader: { type: "string" },
                     screw: { type: "string", description: "Board screw / thread option key" },
                     lid_insert: { type: "boolean" },
+                    screen_insert: { type: "boolean" },
                 },
             },
             handler: async (args) => {

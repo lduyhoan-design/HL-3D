@@ -804,17 +804,18 @@ export const SCREEN_PRESETS: Record<string, ScreenPreset | null> = {
         so: 4,
         th: 10,
     },
+    // theo bản vẽ lcdwiki MSP3218: bo 89.3 × 55.04, lỗ Ø3.2 cách mép 3 mm, vùng hiển thị 64.8 × 48.6, kính dày 2.9
     tft32: {
         group: TFT,
-        name: 'TFT 3.2" SPI ILI9341',
-        w: 89.5,
-        h: 55,
-        win: [66, 50],
-        wdx: 3,
-        holes: [83.5, 49],
+        name: 'TFT 3.2" SPI ILI9341 (14 chân)',
+        w: 89.3,
+        h: 55.04,
+        win: [65.8, 49.6],
+        wdx: 2.85,
+        holes: [83.3, 49.04],
         hr: 1.6,
-        so: 4,
-        th: 6,
+        so: 3,
+        th: 9,
     },
     tft35: {
         group: TFT,
@@ -1078,6 +1079,8 @@ export interface EnclosureOptions {
     screw?: string;
     /** 4 vít nắp dùng đai ốc cấy nhiệt M3 thay cho vít tự ren. */
     lidInsert?: boolean;
+    /** Cọc bắt màn hình / đầu đọc thẻ dưới nắp dùng đai ốc cấy nhiệt (có ren). */
+    screenInsert?: boolean;
 }
 
 export const DEFAULT_ENCLOSURE: EnclosureOptions = {
@@ -1437,14 +1440,23 @@ export function buildEnclosure(o: EnclosureOptions) {
     lid = cut(lid, lidCuts);
     const so: IShape[] = [];
     const soHoles: IShape[] = [];
+    /** Cọc bắt màn hình / đầu đọc thẻ thả từ nắp xuống: lỗ mồi vít tự ren, hoặc lỗ cấy đai ốc đồng (có ren). */
+    const lidPost = (cx: number, cy: number, z0: number, zTop: number, hr: number, roof: number) => {
+        if (o.screenInsert) {
+            // cỡ đai ốc theo lỗ trên bo: Ø3.2 → M3, Ø2.5–3 → M2.5, nhỏ hơn → M2
+            const [d, depth] = hr >= 1.5 ? [4.0, 5.5] : hr >= 1.2 ? [3.6, 5] : [3.2, 4];
+            so.push(cyl(cx, cy, z0, Math.max(hr + 1.1, d / 2 + 1.4), zTop - z0 + 0.01));
+            const zEnd = Math.min(z0 + depth, roof - 0.6);
+            soHoles.push(cyl(cx, cy, z0 - 0.5, d / 2, zEnd - z0 + 0.5));
+        } else {
+            so.push(cyl(cx, cy, z0, hr + 1.1, zTop - z0 + 0.01));
+            soHoles.push(cyl(cx, cy, z0 - 0.5, hr * 0.8, Math.min(zTop - z0 + 0.5, roof - 0.6 - z0 + 0.5)));
+        }
+    };
     if (sc?.holes)
         for (const a of [-1, 1])
-            for (const b of [-1, 1]) {
-                const cx = lay.sx + (a * sc.holes[0]) / 2;
-                const cy = (b * sc.holes[1]) / 2;
-                so.push(cyl(cx, cy, top - sc.so, sc.hr + 1.1, sc.so + 0.01));
-                soHoles.push(cyl(cx, cy, top - sc.so - 0.5, sc.hr * 0.8, sc.so));
-            }
+            for (const b of [-1, 1])
+                lidPost(lay.sx + (a * sc.holes[0]) / 2, (b * sc.holes[1]) / 2, top - sc.so, top, sc.hr, top + t);
     else if (sc) {
         // bo không có lỗ bắt: 4 gờ chữ L ôm góc bo, thả từ nắp xuống quá mặt dưới bo 1 mm (dán keo / băng keo 2 mặt)
         const gl = Math.min(6, sc.w / 3, sc.h / 3);
@@ -1464,12 +1476,8 @@ export function buildEnclosure(o: EnclosureOptions) {
     if (rd) {
         const ceil = top + t - pt;
         for (const a of [-1, 1])
-            for (const b of [-1, 1]) {
-                const cx = lay.rx + (a * rd.holes[0]) / 2;
-                const cy = (b * rd.holes[1]) / 2;
-                so.push(cyl(cx, cy, top - rd.so, rd.hr + 1.1, ceil - (top - rd.so) + 0.01));
-                soHoles.push(cyl(cx, cy, top - rd.so - 0.5, rd.hr * 0.8, rd.so + 0.5));
-            }
+            for (const b of [-1, 1])
+                lidPost(lay.rx + (a * rd.holes[0]) / 2, (b * rd.holes[1]) / 2, top - rd.so, ceil, rd.hr, ceil + pt);
     }
     lid = cut(fuse(lid, so), soHoles);
 
@@ -1913,6 +1921,7 @@ function buildForm(o: EnclosureOptions, withSize = true) {
             { className: "grid" },
             check("4 vít M3 ở góc", o.screws, (v) => ((o.screws = v), refresh())),
             check("Vít nắp dùng đai ốc cấy nhiệt M3", !!o.lidInsert, (v) => ((o.lidInsert = v), refresh())),
+            check("Cọc màn hình / đầu đọc thẻ dùng đai ốc cấy nhiệt", !!o.screenInsert, (v) => ((o.screenInsert = v), refresh())),
             check("Tự khoét lỗ cổng (USB, LAN, DB9) ở thành trái", o.usb, (v) => ((o.usb = v), refresh())),
             check("Khe tản nhiệt (mặt sau)", o.vents, (v) => (o.vents = v)),
             check("Hiện linh kiện tham khảo", o.parts, (v) => (o.parts = v)),
@@ -2726,7 +2735,12 @@ class EnclosureEditor {
             this.refreshBoxForm();
             this.preview();
         });
-        return el("div", { style: "display:grid;gap:6px" }, pick, help, lid);
+        const scr = check("Cọc bắt màn hình / đầu đọc thẻ trên nắp dùng đai ốc cấy nhiệt (có ren)", !!o.screenInsert, (v) => {
+            o.screenInsert = v;
+            this.refreshBoxForm();
+            this.preview();
+        });
+        return el("div", { style: "display:grid;gap:6px" }, pick, help, lid, scr);
     }
 
     /** Đang tự nhập kích thước mà hộp nhỏ hơn bo / màn hình thì tự nới ra cho vừa. */
@@ -3596,10 +3610,11 @@ export interface EnclosureSpec {
     holes?: Partial<HoleOptions>[];
     screw?: string;
     lid_insert?: boolean;
+    screen_insert?: boolean;
 }
 
 function buildOptions(
-    spec: Pick<EnclosureSpec, "boards" | "screen" | "reader" | "wall" | "size" | "screw" | "lid_insert">,
+    spec: Pick<EnclosureSpec, "boards" | "screen" | "reader" | "wall" | "size" | "screw" | "lid_insert" | "screen_insert">,
     unknown: string[] = [],
 ) {
     const o: EnclosureOptions = structuredClone(DEFAULT_ENCLOSURE);
@@ -3622,6 +3637,7 @@ function buildOptions(
     if (spec.wall) o.wall = Math.max(1.2, spec.wall);
     if (spec.screw && spec.screw in SCREW_PILOT) o.screw = spec.screw;
     if (spec.lid_insert !== undefined) o.lidInsert = !!spec.lid_insert;
+    if (spec.screen_insert !== undefined) o.screenInsert = !!spec.screen_insert;
     if (spec.size && (spec.size.l || spec.size.w || spec.size.h)) {
         const lay = layoutEnclosure(o);
         Object.assign(o, {
@@ -3697,6 +3713,7 @@ export interface EnclosureEditSpec {
     reader?: string;
     screw?: string;
     lid_insert?: boolean;
+    screen_insert?: boolean;
 }
 
 /** Hiểu tên cổng người dùng gọi: "type c", "usb-c", "cổng mạng", "com"... */
@@ -3728,6 +3745,10 @@ function editFromSpec(spec: EnclosureEditSpec): string {
     if (spec.screw && spec.screw in SCREW_PILOT) {
         state.o.screw = spec.screw;
         done.push(`chân bắt: ${SCREW_PILOT[spec.screw]!.name}`);
+    }
+    if (spec.screen_insert !== undefined) {
+        state.o.screenInsert = !!spec.screen_insert;
+        done.push(spec.screen_insert ? "cọc màn hình dùng đai ốc cấy nhiệt" : "cọc màn hình vít tự ren");
     }
     if (spec.lid_insert !== undefined) {
         state.o.lidInsert = !!spec.lid_insert;
