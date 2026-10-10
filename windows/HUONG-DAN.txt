@@ -101,7 +101,8 @@ XUẤT FILE IN
 - Kích thước linh kiện là số tham khảo, đo lại bo thật bằng thước kẹp trước khi in bản chính.
 
 TRỢ LÝ AI (khung bên phải)
-- Lỡ bấm ✕ tắt khung AI: tab Hộp mạch > nút "Trợ lý AI" (nhóm "Trợ lý", cuối bên phải) để bật lại.
+- Lỡ bấm ✕ tắt khung AI: bấm nút "✦ Trợ lý AI" hiện ở góc dưới bên phải, hoặc biểu tượng quả ớt
+  trên thanh tiêu đề (cạnh nút Làm lại), hoặc tab Hộp mạch > nút "Trợ lý AI".
 - Thanh công cụ dài quá màn hình: lăn chuột lên thanh công cụ để cuộn sang phải.
 - Gõ yêu cầu tiếng Việt, ví dụ: "khoét lỗ tròn 7mm ở giữa mặt trước thân hộp".
 - Lần đầu dùng: bấm bánh răng (Cài đặt) ở khung AI, chọn nhà cung cấp (Anthropic, OpenAI hoặc dịch vụ
