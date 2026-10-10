@@ -1124,6 +1124,9 @@ export interface EnclosureLayout {
     lidL: number;
     sx: number;
     rx: number;
+    /** Toạ độ Y của màn hình / đầu đọc thẻ (khác 0 khi xếp chồng theo chiều rộng). */
+    sy: number;
+    ry: number;
 }
 
 /** Xếp các bo theo hàng (bo đánh dấu "chồng" thì nằm trên bo ngay trước nó). */
@@ -1178,15 +1181,37 @@ export function layoutEnclosure(o: EnclosureOptions): EnclosureLayout {
     const sc = SCREEN_PRESETS[o.screen] ?? null;
     const rd = READER_PRESETS[o.reader] ?? null;
     const lidGap = sc && rd ? 8 : 0;
-    const lidL = (sc?.w ?? 0) + lidGap + (rd?.w ?? 0);
-    const lidW = Math.max(sc?.h ?? 0, rd?.h ?? 0);
+    // Màn hình + đầu đọc thẻ: xếp cạnh nhau theo chiều dài, hoặc chồng theo chiều rộng — chọn cách vừa hộp
+    const rowL = (sc?.w ?? 0) + lidGap + (rd?.w ?? 0);
+    const rowW = Math.max(sc?.h ?? 0, rd?.h ?? 0);
+    const colL = Math.max(sc?.w ?? 0, rd?.w ?? 0);
+    const colW = (sc?.h ?? 0) + lidGap + (rd?.h ?? 0);
+    const fits = (l: number, w: number) => o.manL >= l + 2 * o.clear - 0.01 && o.manW >= w + 2 * o.clear + 2 * zone - 0.01;
+    const lidArea = (l: number, w: number) =>
+        Math.max(boardsL + 2 * o.clear, l + 2 * o.clear) * Math.max(boardsW + 2 * o.clear + 2 * zone, w + 2 * o.clear + 2 * zone);
+    let stacked = sc && rd ? lidArea(colL, colW) < lidArea(rowL, rowW) - 0.01 : false;
+    if (sc && rd && o.manual) {
+        if (fits(rowL, rowW)) stacked = false;
+        else if (fits(colL, colW)) stacked = true;
+        else {
+            // không cách nào vừa: chọn cách phải nới hộp ít nhất
+            const grow = (l: number, w: number) =>
+                Math.max(o.manL, l + 2 * o.clear) * Math.max(o.manW, w + 2 * o.clear + 2 * zone);
+            stacked = grow(colL, colW) < grow(rowL, rowW);
+        }
+    }
+    const lidL = stacked ? colL : rowL;
+    const lidW = stacked ? colW : rowW;
     const lidStack = Math.max(sc ? sc.so + sc.th : 0, rd ? rd.so + rd.th : 0);
 
     const needL = round(Math.max(boardsL + 2 * o.clear, lidL + 2 * o.clear, 30));
     const needW = round(Math.max(boardsW + 2 * o.clear + 2 * zone, lidW + 2 * o.clear + 2 * zone, 30));
     const hMin = Math.ceil(Math.max(0, ...columns.map(colHeight)) + lidStack + 3);
-    const L = o.manual ? Math.max(10, o.manL) : needL;
-    const W = o.manual ? Math.max(10, o.manW) : needW;
+    // màn hình / đầu đọc thẻ gắn dưới nắp không được thò ra ngoài hộp: nắp tối thiểu phải chứa được chúng
+    const lidNeedL = lidL > 0 ? lidL + 2 * o.clear : 10;
+    const lidNeedW = lidW > 0 ? lidW + 2 * o.clear + 2 * zone : 10;
+    const L = o.manual ? Math.max(10, o.manL, lidNeedL) : needL;
+    const W = o.manual ? Math.max(10, o.manW, lidNeedW) : needW;
     const H = o.manual ? Math.max(8, o.manH) : Math.max(hMin, 20);
 
     const placed: Placed[] = [];
@@ -1212,10 +1237,30 @@ export function layoutEnclosure(o: EnclosureOptions): EnclosureLayout {
         });
         y -= r.wid + o.gap;
     }
-    const x0 = -lidL / 2;
-    const sx = sc ? x0 + sc.w / 2 : 0;
-    const rx = rd ? x0 + (sc ? sc.w + lidGap : 0) + rd.w / 2 : 0;
-    return { L, W, H, hMin, needL, needW, placed, zone, lidL, sx, rx };
+    let sx = 0;
+    let rx = 0;
+    let sy = 0;
+    let ry = 0;
+    if (stacked && sc && rd) {
+        sy = lidW / 2 - sc.h / 2;
+        ry = lidW / 2 - sc.h - lidGap - rd.h / 2;
+    } else {
+        const x0 = -lidL / 2;
+        sx = sc ? x0 + sc.w / 2 : 0;
+        rx = rd ? x0 + (sc ? sc.w + lidGap : 0) + rd.w / 2 : 0;
+    }
+    return { L, W, H, hMin, needL, needW, placed, zone, lidL, sx, rx, sy, ry };
+}
+
+/** Đang tự nhập kích thước mà hộp nhỏ hơn bo / màn hình / đầu đọc thẻ thì nới ra cho vừa. Trả về true nếu có nới. */
+export function growManual(o: EnclosureOptions): boolean {
+    if (!o.manual) return false;
+    const lay = layoutEnclosure(o);
+    const grew = lay.needL > o.manL + 0.01 || lay.needW > o.manW + 0.01 || lay.hMin > o.manH + 0.01;
+    o.manL = Math.max(o.manL, lay.needL);
+    o.manW = Math.max(o.manW, lay.needW);
+    o.manH = Math.max(o.manH, lay.hMin);
+    return grew;
 }
 
 function round(v: number) {
@@ -1432,10 +1477,10 @@ export function buildEnclosure(o: EnclosureOptions) {
     if (sc)
         lidCuts.push(
             sc.round
-                ? cyl(lay.sx + (sc.wdx ?? 0), 0, top - 1, sc.win[0] / 2, t + 2)
-                : cbox(lay.sx + (sc.wdx ?? 0), 0, top - 1, sc.win[0], sc.win[1], t + 2),
+                ? cyl(lay.sx + (sc.wdx ?? 0), lay.sy, top - 1, sc.win[0] / 2, t + 2)
+                : cbox(lay.sx + (sc.wdx ?? 0), lay.sy, top - 1, sc.win[0], sc.win[1], t + 2),
         );
-    if (rd) lidCuts.push(cbox(lay.rx, 0, top - 1, rd.w - 5, rd.h - 5, 1 + t - pt));
+    if (rd) lidCuts.push(cbox(lay.rx, lay.ry, top - 1, rd.w - 5, rd.h - 5, 1 + t - pt));
     if (o.screws) for (const [a, b] of corners) lidCuts.push(cyl(a * bx, b * by, top - 1, 1.7, t + 2));
     lid = cut(lid, lidCuts);
     const so: IShape[] = [];
@@ -1456,7 +1501,7 @@ export function buildEnclosure(o: EnclosureOptions) {
     if (sc?.holes)
         for (const a of [-1, 1])
             for (const b of [-1, 1])
-                lidPost(lay.sx + (a * sc.holes[0]) / 2, (b * sc.holes[1]) / 2, top - sc.so, top, sc.hr, top + t);
+                lidPost(lay.sx + (a * sc.holes[0]) / 2, lay.sy + (b * sc.holes[1]) / 2, top - sc.so, top, sc.hr, top + t);
     else if (sc) {
         // bo không có lỗ bắt: 4 gờ chữ L ôm góc bo, thả từ nắp xuống quá mặt dưới bo 1 mm (dán keo / băng keo 2 mặt)
         const gl = Math.min(6, sc.w / 3, sc.h / 3);
@@ -1466,7 +1511,7 @@ export function buildEnclosure(o: EnclosureOptions) {
         for (const a of [-1, 1])
             for (const b of [-1, 1]) {
                 const ex = lay.sx + (a * sc.w) / 2;
-                const ey = (b * sc.h) / 2;
+                const ey = lay.sy + (b * sc.h) / 2;
                 const ox = a > 0 ? ex + gap : ex - gap - lip;
                 const oy = b > 0 ? ey + gap : ey - gap - lip;
                 so.push(box(ox, b > 0 ? ey - gl : ey, top - hh, lip, gl + gap + lip, hh + 0.01));
@@ -1477,7 +1522,7 @@ export function buildEnclosure(o: EnclosureOptions) {
         const ceil = top + t - pt;
         for (const a of [-1, 1])
             for (const b of [-1, 1])
-                lidPost(lay.rx + (a * rd.holes[0]) / 2, (b * rd.holes[1]) / 2, top - rd.so, ceil, rd.hr, ceil + pt);
+                lidPost(lay.rx + (a * rd.holes[0]) / 2, lay.ry + (b * rd.holes[1]) / 2, top - rd.so, ceil, rd.hr, ceil + pt);
     }
     lid = cut(fuse(lid, so), soHoles);
 
@@ -1530,13 +1575,13 @@ export function buildEnclosure(o: EnclosureOptions) {
             parts.push({
                 name: sc.name,
                 kind: "screen",
-                shape: cbox(lay.sx, 0, top - sc.so - 1.6, sc.w, sc.h, 1.6),
+                shape: cbox(lay.sx, lay.sy, top - sc.so - 1.6, sc.w, sc.h, 1.6),
             });
         if (rd)
             parts.push({
                 name: rd.name,
                 kind: "pcb",
-                shape: cbox(lay.rx, 0, top - rd.so - 1.6, rd.w, rd.h, 1.6),
+                shape: cbox(lay.rx, lay.ry, top - rd.so - 1.6, rd.w, rd.h, 1.6),
             });
     }
     return { body, lid, parts, lay, outer: [Lo, Wo, H + 2 * t] };
@@ -1881,13 +1926,13 @@ function buildForm(o: EnclosureOptions, withSize = true) {
                     k,
                     p ? `${p.group ? `${p.group}: ` : ""}${p.name}` : "Không có",
                 ]),
-                (v) => ((o.screen = v), refresh()),
+                (v) => ((o.screen = v), growManual(o), refresh()),
             ),
             select(
                 "Đầu đọc thẻ",
                 o.reader,
                 Object.entries(READER_PRESETS).map(([k, p]) => [k, p?.name ?? "Không có"]),
-                (v) => ((o.reader = v), refresh()),
+                (v) => ((o.reader = v), growManual(o), refresh()),
             ),
         ),
         ...(withSize
@@ -2437,7 +2482,7 @@ const PANEL_CSS = `
 .ep .chip.on button{border:0;background:none;padding:0 2px;font-size:11px;cursor:pointer;color:inherit}
 .vb{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:40;display:flex;gap:2px;padding:4px;
  border-radius:999px;background:rgba(16,24,32,.88);border:1px solid #1f2b37;box-shadow:0 4px 14px rgba(0,0,0,.25)}
-.vb button{font:600 13px system-ui,sans-serif;color:#cfd6df;background:transparent;border:0;border-radius:999px;padding:7px 14px;cursor:pointer}
+.vb button{white-space:nowrap;font:600 13px system-ui,sans-serif;color:#cfd6df;background:transparent;border:0;border-radius:999px;padding:7px 14px;cursor:pointer}
 .vb button:hover{color:#fff}
 .vb button.on{background:#22c3d6;color:#04161a}
 .vb button.sep{margin-left:6px;border-left:1px solid rgba(255,255,255,.18);border-radius:0 999px 999px 0;color:#9fe0b5}
@@ -3366,6 +3411,7 @@ function commitEnclosure(
     const nodes = printableIn(folder);
     const body = nodes.find((x) => !isLid(x.name));
     const lid = nodes.find((x) => isLid(x.name));
+    const mode = currentMode(folder);
     Transaction.execute(document, "edit enclosure", () => {
         folder.params = JSON.stringify(state);
         folder.name = enclosureName(r.outer);
@@ -3392,9 +3438,13 @@ function commitEnclosure(
             pf.visible = partsVisible;
             folder.add(pf);
             addParts(document, pf, r.parts);
+            // giữ đúng chế độ đang xem (Chỉ nắp / Chỉ đáy) cho linh kiện vừa dựng lại
+            if (mode !== "all")
+                for (let p = pf.firstChild; p; p = p.nextSibling) p.visible = (mode === "lid") === LID_PART_NAMES.has(p.name);
         }
     });
     document.visual.update();
+    syncViewBar();
 }
 
 function openEditor(application: IApplication, addPreset?: string): boolean {
